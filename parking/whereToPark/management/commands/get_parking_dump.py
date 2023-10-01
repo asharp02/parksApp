@@ -51,9 +51,13 @@ class Command(BaseCommand):
     def unzip_files(self):
         """Unzips the necessary files within the zipped parking_schedules folder"""
         with ZipFile("parking_schedules.zip", "r") as zObject:
-            no_parking_filename = "Ch_950_Sch_13_NoParking_current_to_Feb242021.xml"
-            restricted_parking_filename = (
-                "Ch_950_Sch_15_ParkingForRestrictedPeriods_current_to_Feb242021.xml"
-            )
-            zObject.extract(no_parking_filename, path="fixtures")
-            zObject.extract(restricted_parking_filename, path="fixtures")
+            no_parking_prefix = "Ch_950_Sch_13_NoParking"
+            restricted_prefix = "Ch_950_Sch_15_ParkingForRestrictedPeriods"
+            zipdata = zObject.infolist()
+            for zfile in zipdata:
+                if zfile.filename.startswith(no_parking_prefix):
+                    zfile.filename = "no_parking.xml"
+                    zObject.extract(zfile, path="fixtures")
+                elif zfile.filename.startswith(restricted_prefix):
+                    zfile.filename = "restricted_parking.xml"
+                    zObject.extract(zfile, path="fixtures")

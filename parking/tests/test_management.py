@@ -21,7 +21,7 @@ class GetParkingDumpTests(SimpleTestCase):
 
     def test_unzip_files_in_right_folder(self):
         Command().unzip_files()
-        directory = "whereToPark/fixtures"
+        directory = "fixtures"
         no_parking_filename = "no_parking.xml"
         restricted_parking_filename = "restricted_parking.xml"
         self.assertTrue(file_exists(directory, no_parking_filename))
