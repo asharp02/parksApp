@@ -18,40 +18,46 @@ class Command(BaseCommand):
     #     parser.add_argument("poll_ids", nargs="+", type=int)
 
     def handle(self, *args, **options):
-        fetch_data_folder()
-        unzip_files()
+        self.fetch_data_folder()
+        self.unzip_files()
 
+    def fetch_data_folder(self):
+        """Makes a GET request to API, if succesful, creates a parking_schedules folder with contents
+        of response (ZIP)"""
+        base_url = "https://ckan0.cf.opendata.inter.prod-toronto.ca"
+        url = base_url + "/api/3/action/package_show"
+        params = {"id": "traffic-and-parking-by-law-schedules"}
+        package = requests.get(url, params=params).json()
+        for idx, resource in enumerate(package["result"]["resources"]):
+            if resource["name"] != "Traffic and parking by-law schedules":
+                continue
+            # To get metadata for non datastore_active resources:
+            url = base_url + "/api/3/action/resource_show?id=" + resource["id"]
+            resource_metadata = requests.get(url).json()
+            if resource_metadata["success"] != True:
+                print(
+                    "Error: dataset fetch was unsuccesful"
+                )  # TODO Replace with logger
+                return
+            response = requests.get(resource["url"])
+            if response.status_code != 200:
+                print(
+                    "Error: dataset fetch was unsuccesful"
+                )  # TODO Replace with logger
+                return
+            with open("parking_schedules.zip", mode="wb") as file:
+                file.write(response.content)
 
-def fetch_data_folder():
-    """Makes a GET request to API, if succesful, creates a parking_schedules folder with contents
-    of response (ZIP)"""
-    base_url = "https://ckan0.cf.opendata.inter.prod-toronto.ca"
-    url = base_url + "/api/3/action/package_show"
-    params = {"id": "traffic-and-parking-by-law-schedules"}
-    package = requests.get(url, params=params).json()
-    for idx, resource in enumerate(package["result"]["resources"]):
-        if resource["name"] != "Traffic and parking by-law schedules":
-            continue
-        # To get metadata for non datastore_active resources:
-        url = base_url + "/api/3/action/resource_show?id=" + resource["id"]
-        resource_metadata = requests.get(url).json()
-        if resource_metadata["success"] != True:
-            print("Error: dataset fetch was unsuccesful")  # TODO Replace with logger
-            return
-        response = requests.get(resource["url"])
-        if response.status_code != 200:
-            print("Error: dataset fetch was unsuccesful")  # TODO Replace with logger
-            return
-        with open("parking_schedules.zip", mode="wb") as file:
-            file.write(response.content)
-
-
-def unzip_files():
-    """Unzips the necessary files within the zipped parking_schedules folder"""
-    with ZipFile("parking_schedules.zip", "r") as zObject:
-        no_parking_filename = "Ch_950_Sch_13_NoParking_current_to_Feb242021.xml"
-        restricted_parking_filename = (
-            "Ch_950_Sch_15_ParkingForRestrictedPeriods_current_to_Feb242021.xml"
-        )
-        zObject.extract(no_parking_filename, path="fixtures")
-        zObject.extract(restricted_parking_filename, path="fixtures")
+    def unzip_files(self):
+        """Unzips the necessary files within the zipped parking_schedules folder"""
+        with ZipFile("parking_schedules.zip", "r") as zObject:
+            no_parking_prefix = "Ch_950_Sch_13_NoParking"
+            restricted_prefix = "Ch_950_Sch_15_ParkingForRestrictedPeriods"
+            zipdata = zObject.infolist()
+            for zfile in zipdata:
+                if zfile.filename.startswith(no_parking_prefix):
+                    zfile.filename = "no_parking.xml"
+                    zObject.extract(zfile, path="fixtures")
+                elif zfile.filename.startswith(restricted_prefix):
+                    zfile.filename = "restricted_parking.xml"
+                    zObject.extract(zfile, path="fixtures")
