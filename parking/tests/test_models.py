@@ -15,7 +15,6 @@ class NoParkingByLawModelTest(TestCase):
             highway="Ashbury Avenue",
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
-            times_and_or_days="10:00 a.m. to 6:00 p.m., Mon. to Fri.",
             prohibited_times_and_or_days="12 hours",
         )
 
@@ -54,12 +53,7 @@ class NoParkingByLawModelTest(TestCase):
         field_label = law._meta.get_field("between").verbose_name
         self.assertEqual(field_label, "between")
 
-    def test_times_and_or_day_label(self):
-        law = NoParkingByLaw.objects.get(id=1)
-        field_label = law._meta.get_field("times_and_or_days").verbose_name
-        self.assertEqual(field_label, "times and or days")
-
-    def test_max_period_permitted_label(self):
+    def test_prohibited_times_and_or_days_label(self):
         law = NoParkingByLaw.objects.get(id=1)
         field_label = law._meta.get_field("prohibited_times_and_or_days").verbose_name
         self.assertEqual(field_label, "prohibited times and or days")

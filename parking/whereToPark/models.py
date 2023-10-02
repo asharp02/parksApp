@@ -16,10 +16,9 @@ class NoParkingByLaw(models.Model):
     schedule = models.CharField(max_length=10)
     schedule_name = models.CharField(max_length=100)
     highway = models.CharField(max_length=100)
-    side = models.CharField(max_length=10)
-    between = models.CharField(max_length=200)
-    times_and_or_days = models.CharField(max_length=200)
-    prohibited_times_and_or_days = models.CharField(max_length=100)
+    side = models.CharField(max_length=10, null=True)
+    between = models.CharField(max_length=200, null=True)
+    prohibited_times_and_or_days = models.CharField(max_length=200, null=True)
 
 
 class RestrictedParkingByLaw(models.Model):
@@ -34,7 +33,7 @@ class RestrictedParkingByLaw(models.Model):
     schedule = models.CharField(max_length=10)
     schedule_name = models.CharField(max_length=100)
     highway = models.CharField(max_length=100)
-    side = models.CharField(max_length=10)
-    between = models.CharField(max_length=200)
-    times_and_or_days = models.CharField(max_length=200)
-    max_period_permitted = models.CharField(max_length=100)
+    side = models.CharField(max_length=10, null=True)
+    between = models.CharField(max_length=200, null=True)
+    times_and_or_days = models.CharField(max_length=200, null=True)
+    max_period_permitted = models.CharField(max_length=100, null=True)
