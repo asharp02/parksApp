@@ -58,6 +58,10 @@ class NoParkingByLawModelTest(TestCase):
         field_label = law._meta.get_field("prohibited_times_and_or_days").verbose_name
         self.assertEqual(field_label, "prohibited times and or days")
 
+    def test_str_method(self):
+        law = NoParkingByLaw.objects.get(id=1)
+        self.assertEqual(law.__str__(), "Ashbury Avenue (North) - 1")
+
 
 class RestrictedParkingByLawModelTest(TestCase):
     @classmethod
@@ -119,3 +123,7 @@ class RestrictedParkingByLawModelTest(TestCase):
         law = RestrictedParkingByLaw.objects.get(id=1)
         field_label = law._meta.get_field("max_period_permitted").verbose_name
         self.assertEqual(field_label, "max period permitted")
+
+    def test_str_method(self):
+        law = RestrictedParkingByLaw.objects.get(id=1)
+        self.assertEqual(law.__str__(), "Ashbury Avenue (North) - 1")
