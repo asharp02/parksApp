@@ -12,7 +12,7 @@ class NoParkingByLaw(models.Model):
     """
 
     bylaw_no = models.CharField(max_length=100)
-    source_id = models.CharField(max_length=10)
+    source_id = models.IntegerField(unique=True)
     schedule = models.CharField(max_length=10)
     schedule_name = models.CharField(max_length=100)
     highway = models.CharField(max_length=100)
@@ -29,7 +29,7 @@ class RestrictedParkingByLaw(models.Model):
     """
 
     bylaw_no = models.CharField(max_length=100)
-    source_id = models.CharField(max_length=10)
+    source_id = models.IntegerField(unique=True)
     schedule = models.CharField(max_length=10)
     schedule_name = models.CharField(max_length=100)
     highway = models.CharField(max_length=100)
