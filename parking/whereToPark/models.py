@@ -20,6 +20,9 @@ class NoParkingByLaw(models.Model):
     between = models.CharField(max_length=200, null=True)
     prohibited_times_and_or_days = models.CharField(max_length=200, null=True)
 
+    def __str__(self):
+        return f"{self.highway} ({self.side}) - {self.source_id}"
+
 
 class RestrictedParkingByLaw(models.Model):
     """
@@ -37,3 +40,6 @@ class RestrictedParkingByLaw(models.Model):
     between = models.CharField(max_length=200, null=True)
     times_and_or_days = models.CharField(max_length=200, null=True)
     max_period_permitted = models.CharField(max_length=100, null=True)
+
+    def __str__(self):
+        return f"{self.highway} ({self.side}) - {self.source_id}"
