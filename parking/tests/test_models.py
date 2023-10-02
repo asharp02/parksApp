@@ -6,6 +6,10 @@ from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw
 class NoParkingByLawModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
+        boundary_a_lat = -90.5203
+        boundary_a_lng = 29.5233
+        boundary_b_lat = -94.5203
+        boundary_b_lng = 30.5233
         # setup objects used by all test methods
         NoParkingByLaw.objects.create(
             bylaw_no="[Repealed 2016-04-05 by By-law No. 365-2016]",
@@ -16,6 +20,10 @@ class NoParkingByLawModelTest(TestCase):
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
             prohibited_times_and_or_days="12 hours",
+            boundary_a_lat=boundary_a_lat,
+            boundary_a_lng=boundary_a_lng,
+            boundary_b_lat=boundary_b_lat,
+            boundary_b_lng=boundary_b_lng,
         )
 
     def test_bylaw_no_label(self):
@@ -66,6 +74,10 @@ class NoParkingByLawModelTest(TestCase):
 class RestrictedParkingByLawModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
+        boundary_a_lat = -90.5203
+        boundary_a_lng = 29.5233
+        boundary_b_lat = -94.5203
+        boundary_b_lng = 30.5233
         # setup objects used by all test methods
         RestrictedParkingByLaw.objects.create(
             bylaw_no="[Repealed 2016-04-05 by By-law No. 365-2016]",
@@ -77,6 +89,10 @@ class RestrictedParkingByLawModelTest(TestCase):
             between="Glenholme Avenue and Oakwood Avenue",
             times_and_or_days="10:00 a.m. to 6:00 p.m., Mon. to Fri.",
             max_period_permitted="12 hours",
+            boundary_a_lat=boundary_a_lat,
+            boundary_a_lng=boundary_a_lng,
+            boundary_b_lat=boundary_b_lat,
+            boundary_b_lng=boundary_b_lng,
         )
 
     def test_bylaw_no_label(self):

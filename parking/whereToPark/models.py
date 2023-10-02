@@ -19,6 +19,10 @@ class NoParkingByLaw(models.Model):
     side = models.CharField(max_length=10, null=True)
     between = models.CharField(max_length=200, null=True)
     prohibited_times_and_or_days = models.CharField(max_length=200, null=True)
+    boundary_a_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    boundary_a_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    boundary_b_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    boundary_b_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True)
 
     def __str__(self):
         return f"{self.highway} ({self.side}) - {self.source_id}"
@@ -40,6 +44,10 @@ class RestrictedParkingByLaw(models.Model):
     between = models.CharField(max_length=200, null=True)
     times_and_or_days = models.CharField(max_length=200, null=True)
     max_period_permitted = models.CharField(max_length=100, null=True)
+    boundary_a_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    boundary_a_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    boundary_b_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    boundary_b_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True)
 
     def __str__(self):
         return f"{self.highway} ({self.side}) - {self.source_id}"
