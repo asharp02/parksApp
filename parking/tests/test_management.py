@@ -1,8 +1,15 @@
 import os
 import xml.etree.ElementTree as ET
 
+from django.core.management import call_command
 from django.test import TestCase, SimpleTestCase
-from whereToPark.management.commands.get_parking_dump import Command
+from whereToPark.management.commands.get_parking_dump import (
+    Command as GetParkingDumpCmd,
+)
+from whereToPark.management.commands.import_parking_data import (
+    Command as ImportParkingCmd,
+)
+
 from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw
 
 # Create your tests here.
@@ -16,13 +23,13 @@ def file_exists(directory, filename):
 
 class GetParkingDumpTests(SimpleTestCase):
     def test_fetch_data_folder_outputs_zipped_folder(self):
-        Command().fetch_data_folder()
+        GetParkingDumpCmd().fetch_data_folder()
         directory = ""
         filename = "parking_schedules.zip"
         self.assertTrue(file_exists(directory, filename))
 
     def test_unzip_files_in_right_folder(self):
-        Command().unzip_files()
+        GetParkingDumpCmd().unzip_files()
         directory = "fixtures"
         no_parking_filename = "no_parking.xml"
         restricted_parking_filename = "restricted_parking.xml"
@@ -31,14 +38,18 @@ class GetParkingDumpTests(SimpleTestCase):
 
 
 class ImportParkingDataTests(TestCase):
-    def test_model_count_matches_xml_files(self):
-        pass
-        # no_parking_tree = ET.parse("fixtures/no_parking.xml")
-        # no_parking_root = no_parking_tree.getroot()
+    def setUp(self):
+        call_command("import_parking_data")
 
-        # restricted_parking_tree = ET.parse("fixtures/restricted_parking.xml")
-        # print(len(no_parking_root.getchildren()))
-        # ParkingByLaw.objects.count()
-        # self.assertEqual(ParkingByLaw.objects.count())
+    def test_noparkingbylaw_model_count_matches_xml_file(self):
+        tree = ET.parse("fixtures/no_parking.xml")
+        root = tree.getroot()
 
-        # restricted_tree = ET.parse("fixtures/restricted_parking.xml")
+        self.assertEqual(NoParkingByLaw.objects.count(), len(root.getchildren()))
+
+    def test_restrictedparkingbylaw_model_count_matches_xml_file(self):
+        tree = ET.parse("fixtures/restricted_parking.xml")
+        root = tree.getroot()
+        self.assertEqual(
+            RestrictedParkingByLaw.objects.count(), len(root.getchildren())
+        )
