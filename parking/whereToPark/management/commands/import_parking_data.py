@@ -36,6 +36,7 @@ class Command(BaseCommand):
                 if item.tag not in FIELD_MAPPINGS.keys():
                     continue
                 attributes[FIELD_MAPPINGS[item.tag]] = item.text
+                attributes["source_id"] = int(attributes["source_id"])
             law, _ = NoParkingByLaw.objects.update_or_create(
                 source_id=attributes["source_id"], defaults=attributes
             )
@@ -50,6 +51,7 @@ class Command(BaseCommand):
                 if item.tag not in FIELD_MAPPINGS.keys():
                     continue
                 attributes[FIELD_MAPPINGS[item.tag]] = item.text
+                attributes["source_id"] = int(attributes["source_id"])
             law, _ = RestrictedParkingByLaw.objects.update_or_create(
                 source_id=attributes["source_id"], defaults=attributes
             )
