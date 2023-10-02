@@ -40,16 +40,39 @@ class GetParkingDumpTests(SimpleTestCase):
 class ImportParkingDataTests(TestCase):
     def setUp(self):
         call_command("import_parking_data")
+        np_tree = ET.parse("fixtures/no_parking.xml")
+        self.np_root = np_tree.getroot()
+
+        rp_tree = ET.parse("fixtures/restricted_parking.xml")
+        self.rp_root = rp_tree.getroot()
 
     def test_noparkingbylaw_model_count_matches_xml_file(self):
-        tree = ET.parse("fixtures/no_parking.xml")
-        root = tree.getroot()
-
-        self.assertEqual(NoParkingByLaw.objects.count(), len(root.getchildren()))
+        self.assertEqual(
+            NoParkingByLaw.objects.count(), len(self.np_root.getchildren())
+        )
 
     def test_restrictedparkingbylaw_model_count_matches_xml_file(self):
-        tree = ET.parse("fixtures/restricted_parking.xml")
-        root = tree.getroot()
         self.assertEqual(
-            RestrictedParkingByLaw.objects.count(), len(root.getchildren())
+            RestrictedParkingByLaw.objects.count(), len(self.rp_root.getchildren())
         )
+
+    def test_no_parking_cmd_does_not_create_duplicates(self):
+        total_count_pre = NoParkingByLaw.objects.count()
+        ImportParkingCmd().import_no_parking()
+
+        self.assertEqual(total_count_pre, NoParkingByLaw.objects.count())
+
+        first_id = NoParkingByLaw.objects.first().source_id
+        count_with_id = NoParkingByLaw.objects.filter(source_id=first_id).count()
+        self.assertEqual(count_with_id, 1)
+
+    def test_restricted_parking_cmd_does_not_create_duplicates(self):
+        total_count_pre = RestrictedParkingByLaw.objects.count()
+        ImportParkingCmd().import_restricted_parking()
+        self.assertEqual(total_count_pre, RestrictedParkingByLaw.objects.count())
+
+        first_id = RestrictedParkingByLaw.objects.first().source_id
+        count_with_id = RestrictedParkingByLaw.objects.filter(
+            source_id=first_id
+        ).count()
+        self.assertEqual(count_with_id, 1)
