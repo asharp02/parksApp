@@ -37,6 +37,7 @@ class Command(BaseCommand):
                     continue
                 attributes[FIELD_MAPPINGS[item.tag]] = item.text
                 attributes["source_id"] = int(attributes["source_id"])
+            self.handle_between_field(attributes)
             law, _ = NoParkingByLaw.objects.update_or_create(
                 source_id=attributes["source_id"], defaults=attributes
             )
@@ -52,7 +53,16 @@ class Command(BaseCommand):
                     continue
                 attributes[FIELD_MAPPINGS[item.tag]] = item.text
                 attributes["source_id"] = int(attributes["source_id"])
+            self.handle_between_field(attributes)
             law, _ = RestrictedParkingByLaw.objects.update_or_create(
                 source_id=attributes["source_id"], defaults=attributes
             )
             law.save()
+
+    def handle_between_field(self, attributes):
+        if "between" not in attributes or attributes["between"] == None:
+            return
+        street_split = attributes["between"].split(" and ")
+        if len(street_split) == 2:
+            attributes["between_street_a"] = street_split[0]
+            attributes["between_street_b"] = street_split[1]
