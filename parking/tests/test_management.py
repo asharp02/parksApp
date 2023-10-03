@@ -9,6 +9,7 @@ from whereToPark.management.commands.get_parking_dump import (
 from whereToPark.management.commands.import_parking_data import (
     Command as ImportParkingCmd,
 )
+from whereToPark.management.commands.set_location_data import Command as SetParkingCmd
 
 from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw
 
@@ -37,6 +38,71 @@ class GetParkingDumpTests(SimpleTestCase):
         self.assertTrue(file_exists(directory, restricted_parking_filename))
 
 
+class SetLocationDataTests(TestCase):
+    def setUp(self):
+        NoParkingByLaw.objects.create(
+            bylaw_no="[Repealed 2016-04-05 by By-law No. 365-2016]",
+            source_id="1",
+            schedule="15",
+            schedule_name="Parking for Restricted Periods",
+            highway="Ashbury Avenue",
+            side="North",
+            between="Glenholme Avenue and Oakwood Avenue",
+            prohibited_times_and_or_days="12 hours",
+        )
+        RestrictedParkingByLaw.objects.create(
+            bylaw_no="[Repealed 2016-04-05 by By-law No. 365-2016]",
+            source_id="1",
+            schedule="15",
+            schedule_name="Parking for Restricted Periods",
+            highway="Ashbury Avenue",
+            side="North",
+            between="Glenholme Avenue and Oakwood Avenue",
+            times_and_or_days="12 hours",
+            max_period_permitted="12 hours",
+        )
+
+    def test_simple_between_field_produces_correct_lat_lng(self):
+        SetParkingCmd().handle_no_parking_locations()
+        law = NoParkingByLaw.objects.get(id=1)
+        self.assertAlmostEqual(law.boundary_a_lat, 43.689936, delta=0.000016)
+        self.assertAlmostEqual(law.boundary_a_lng, -79.442908, delta=0.0004)
+        self.assertAlmostEqual(law.boundary_b_lat, 43.690593, delta=0.000016)
+        self.assertAlmostEqual(law.boundary_b_lng, -79.440109, delta=0.0004)
+
+    def test_simple_between_field_produces_correct_lat_lng_restricted(self):
+        SetParkingCmd().handle_restricted_locations()
+        law = RestrictedParkingByLaw.objects.get(id=1)
+        self.assertAlmostEqual(law.boundary_a_lat, 43.689936, delta=0.000016)
+        self.assertAlmostEqual(law.boundary_a_lng, -79.442908, delta=0.0004)
+        self.assertAlmostEqual(law.boundary_b_lat, 43.690593, delta=0.000016)
+        self.assertAlmostEqual(law.boundary_b_lng, -79.440109, delta=0.0004)
+
+    def test_simple_between_field_parsed(self):
+        law = NoParkingByLaw.objects.get(id=1)
+        street_a, street_b = SetParkingCmd().handle_between_field(law)
+        self.assertEqual(street_a, "Glenholme Avenue")
+        self.assertEqual(street_b, "Oakwood Avenue")
+
+    def test_complex_between_field_doesnt_save_location(self):
+        NoParkingByLaw.objects.create(
+            bylaw_no="[Repealed 2016-04-05 by By-law No. 365-2016]",
+            source_id="1",
+            schedule="15",
+            schedule_name="Parking for Restricted Periods",
+            highway="Ashbury Avenue",
+            side="North",
+            between="Brock Avenue and the west end of Abbs Street",
+            prohibited_times_and_or_days="12 hours",
+        )
+        SetParkingCmd().handle_no_parking_locations()
+        law = NoParkingByLaw.objects.get(id=2)
+        self.assertIsNone(law.boundary_a_lat)
+        self.assertIsNone(law.boundary_a_lng)
+        self.assertIsNone(law.boundary_b_lat)
+        self.assertIsNone(law.boundary_b_lng)
+
+
 class ImportParkingDataTests(TestCase):
     def setUp(self):
         call_command("import_parking_data")
@@ -45,6 +111,18 @@ class ImportParkingDataTests(TestCase):
 
         rp_tree = ET.parse("fixtures/restricted_parking.xml")
         self.rp_root = rp_tree.getroot()
+
+    def test_between_street_a_and_b_fields_set_no_parking(self):
+        law = NoParkingByLaw.objects.first()
+        between = law.between
+        self.assertEqual(law.between_street_a, between.split(" and ")[0])
+        self.assertEqual(law.between_street_b, between.split(" and ")[1])
+
+    def test_between_street_a_and_b_fields_set_restricted(self):
+        law = RestrictedParkingByLaw.objects.first()
+        between = law.between
+        self.assertEqual(law.between_street_a, between.split(" and ")[0])
+        self.assertEqual(law.between_street_b, between.split(" and ")[1])
 
     def test_noparkingbylaw_model_count_matches_xml_file(self):
         self.assertEqual(
