@@ -19,6 +19,8 @@ class NoParkingByLawModelTest(TestCase):
             highway="Ashbury Avenue",
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
+            between_street_a="Glenholme Avenue",
+            between_street_b="Oakwood Avenue",
             prohibited_times_and_or_days="12 hours",
             boundary_a_lat=boundary_a_lat,
             boundary_a_lng=boundary_a_lng,
@@ -61,6 +63,16 @@ class NoParkingByLawModelTest(TestCase):
         field_label = law._meta.get_field("between").verbose_name
         self.assertEqual(field_label, "between")
 
+    def test_between_street_a_label(self):
+        law = NoParkingByLaw.objects.get(id=1)
+        field_label = law._meta.get_field("between_street_a").verbose_name
+        self.assertEqual(field_label, "between street a")
+
+    def test_between_street_b_label(self):
+        law = NoParkingByLaw.objects.get(id=1)
+        field_label = law._meta.get_field("between_street_b").verbose_name
+        self.assertEqual(field_label, "between street b")
+
     def test_prohibited_times_and_or_days_label(self):
         law = NoParkingByLaw.objects.get(id=1)
         field_label = law._meta.get_field("prohibited_times_and_or_days").verbose_name
@@ -87,6 +99,8 @@ class RestrictedParkingByLawModelTest(TestCase):
             highway="Ashbury Avenue",
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
+            between_street_a="Glenholme Avenue",
+            between_street_b="Oakwood Avenue",
             times_and_or_days="10:00 a.m. to 6:00 p.m., Mon. to Fri.",
             max_period_permitted="12 hours",
             boundary_a_lat=boundary_a_lat,
@@ -129,6 +143,16 @@ class RestrictedParkingByLawModelTest(TestCase):
         law = RestrictedParkingByLaw.objects.get(id=1)
         field_label = law._meta.get_field("between").verbose_name
         self.assertEqual(field_label, "between")
+
+    def test_between_street_a_label(self):
+        law = RestrictedParkingByLaw.objects.get(id=1)
+        field_label = law._meta.get_field("between_street_a").verbose_name
+        self.assertEqual(field_label, "between street a")
+
+    def test_between_street_b_label(self):
+        law = RestrictedParkingByLaw.objects.get(id=1)
+        field_label = law._meta.get_field("between_street_b").verbose_name
+        self.assertEqual(field_label, "between street b")
 
     def test_times_and_or_day_label(self):
         law = RestrictedParkingByLaw.objects.get(id=1)
