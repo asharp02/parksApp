@@ -9,10 +9,34 @@
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 </head>
 <body>
-    <div id='map'></div>
+    <div style="width: 1000px;height:1000px" id='map'></div>
     {% for bylaw in bylaws %}
         <div> {{ bylaw }}</div></br>
     {% endfor %}
     <script>
+
+        let currentEventMarkers = [];
+
+        let hiddenInput = document.querySelector("#MAPBOX_API_KEY");
+        let mapboxAccessToken = "pk.eyJ1IjoiYXNoYXJwMDIiLCJhIjoiY2p5b3EwMTJyMTdoajNtbG1jZTJsaHJvYSJ9.KacigdAtzleu4QeM-dx7XQ";
+
+        function drawMap() {
+        mapboxgl.accessToken = mapboxAccessToken;
+        map = new mapboxgl.Map({
+            container: "map", // container ID
+            style: "mapbox://styles/mapbox/streets-v12", // style URL
+            // center: [userLongitude, userLatitude], // starting position [lng, lat]
+            zoom: 2.5, // starting zoom
+        });
+        let marker;
+        let coord;
+        {% for bylaw in bylaws %}
+            coord = [{{ bylaw.boundary_a_lng }}, {{ bylaw.boundary_a_lat }} ]
+            marker = new mapboxgl.Marker({ color: "#50C878" })
+                .setLngLat(coord)
+                .addTo(map);
+        {% endfor %}
+        }
+        drawMap()
     </script>
 </body>
