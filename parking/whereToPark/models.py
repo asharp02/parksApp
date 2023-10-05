@@ -59,7 +59,10 @@ class RestrictedParkingByLaw(models.Model):
 
 class Highway(models.Model):
     name = models.CharField(max_length=100)
-    street_end = models.CharField(choices=STREET_SIDES, max_length=10)
+    street_end = models.CharField(choices=STREET_SIDES, max_length=10, null=True)
+
+    class Meta:
+        unique_together = ["name", "street_end"]
 
     def __str__(self):
-        return f"{self.name} {self.street_end}"
+        return f"{self.name} {self.street_end}" if self.street_end else self.name

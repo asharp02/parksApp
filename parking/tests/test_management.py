@@ -173,3 +173,19 @@ class ImportParkingDataTests(TestCase):
             source_id=first_id
         ).count()
         self.assertEqual(count_with_id, 1)
+
+    def test_process_highway_parses_correctly(self):
+        simple_highway = "King Street"
+        parsed_res = ImportParkingCmd().process_highway_name(simple_highway)
+        self.assertEqual(parsed_res[0], "king street")
+        self.assertIsNone(parsed_res[1])
+
+        highway_with_end = "King Street West"
+        result = ImportParkingCmd().process_highway_name(highway_with_end)
+        self.assertEqual(result[0], "king street")
+        self.assertEqual(result[1], "west")
+
+        highway_with_parens = "Isaac Devins Boulevard (south branch)"
+        result = ImportParkingCmd().process_highway_name(highway_with_end)
+        self.assertEqual(result[0], "king street")
+        self.assertEqual(result[1], "west")
