@@ -1,6 +1,5 @@
 import os
 import xml.etree.ElementTree as ET
-from decimal import Decimal
 
 from django.core.management import call_command
 from django.test import TestCase, SimpleTestCase
@@ -70,18 +69,18 @@ class SetLocationDataTests(TestCase):
     def test_simple_between_field_produces_correct_lat_lng(self):
         SetParkingCmd().handle_no_parking_locations()
         law = NoParkingByLaw.objects.get(id=1)
-        self.assertAlmostEqual(law.boundary_a_lat, Decimal(43.689936), delta=0.00005)
-        self.assertAlmostEqual(law.boundary_a_lng, Decimal(-79.442908), delta=0.0005)
-        self.assertAlmostEqual(law.boundary_b_lat, Decimal(43.690593), delta=0.00005)
-        self.assertAlmostEqual(law.boundary_b_lng, Decimal(-79.440109), delta=0.0005)
+        self.assertAlmostEqual(law.boundary_a_lat, 43.689936, delta=0.00005)
+        self.assertAlmostEqual(law.boundary_a_lng, -79.442908, delta=0.0005)
+        self.assertAlmostEqual(law.boundary_b_lat, 43.690593, delta=0.00005)
+        self.assertAlmostEqual(law.boundary_b_lng, -79.440109, delta=0.0005)
 
     def test_simple_between_field_produces_correct_lat_lng_restricted(self):
         SetParkingCmd().handle_restricted_locations()
         law = RestrictedParkingByLaw.objects.get(id=1)
-        self.assertAlmostEqual(law.boundary_a_lat, Decimal(43.689936), delta=0.00005)
-        self.assertAlmostEqual(law.boundary_a_lng, Decimal(-79.442908), delta=0.0005)
-        self.assertAlmostEqual(law.boundary_b_lat, Decimal(43.690593), delta=0.00005)
-        self.assertAlmostEqual(law.boundary_b_lng, Decimal(-79.440109), delta=0.0005)
+        self.assertAlmostEqual(law.boundary_a_lat, 43.689936, delta=0.00005)
+        self.assertAlmostEqual(law.boundary_a_lng, -79.442908, delta=0.0005)
+        self.assertAlmostEqual(law.boundary_b_lat, 43.690593, delta=0.00005)
+        self.assertAlmostEqual(law.boundary_b_lng, -79.440109, delta=0.0005)
 
     def test_simple_between_field_parsed(self):
         law = NoParkingByLaw.objects.get(id=1)
@@ -119,8 +118,8 @@ class SetLocationDataTests(TestCase):
                     </geodata>"
         tree = ET.fromstring(sample_xml)
         lat, lng = SetParkingCmd().parse_geocode_xml(tree)
-        self.assertEqual(lat, Decimal(43.690601))
-        self.assertEqual(lng, Decimal(-79.439944))
+        self.assertEqual(lat, 43.690601)
+        self.assertEqual(lng, -79.439944)
 
 
 class ImportParkingDataTests(TestCase):

@@ -24,7 +24,7 @@ class Command(BaseCommand):
         # the west end of X
         for law in NoParkingByLaw.objects.exclude(between__icontains="point").exclude(
             between__icontains="end"
-        )[5:25]:
+        )[25:45]:
             self.handle_setting_boundaries(law)
 
     def handle_restricted_locations(self):
@@ -32,7 +32,7 @@ class Command(BaseCommand):
         # the west end of X
         for law in RestrictedParkingByLaw.objects.exclude(
             between__icontains="point"
-        ).exclude(between__icontains="end")[5:25]:
+        ).exclude(between__icontains="end")[25:45]:
             self.handle_setting_boundaries(law)
 
     def handle_between_field(self, law):
