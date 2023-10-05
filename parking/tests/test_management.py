@@ -155,7 +155,7 @@ class ImportParkingDataTests(TestCase):
 
     def test_no_parking_cmd_does_not_create_duplicates(self):
         total_count_pre = NoParkingByLaw.objects.count()
-        ImportParkingCmd().import_no_parking()
+        call_command("import_parking_data")
 
         self.assertEqual(total_count_pre, NoParkingByLaw.objects.count())
 
@@ -165,7 +165,7 @@ class ImportParkingDataTests(TestCase):
 
     def test_restricted_parking_cmd_does_not_create_duplicates(self):
         total_count_pre = RestrictedParkingByLaw.objects.count()
-        ImportParkingCmd().import_restricted_parking()
+        call_command("import_parking_data")
         self.assertEqual(total_count_pre, RestrictedParkingByLaw.objects.count())
 
         first_id = RestrictedParkingByLaw.objects.first().source_id

@@ -24,12 +24,13 @@ class Command(BaseCommand):
     """
 
     no_parking_bylaws = []
-    restricted_parking_bylaws = []
+    restricted_bylaws = []
 
     def handle(self, *args, **options):
         self.no_parking_bylaws = self.fetch_bylaws(False)
         self.restricted_bylaws = self.fetch_bylaws(True)
         self.import_highways()
+        self.import_bylaws()
 
     def import_highways(self):
         highway_names = map(
@@ -46,6 +47,10 @@ class Command(BaseCommand):
         Highway.objects.bulk_create(highway_objs)
 
     def process_highway_name(self, name):
+        """Given a highway name from the XML source, returns a tuple containing
+        the parsed name and the direction/end of the street. Removes parens
+        from name for cases like 'College Street (North Branch)'.
+        """
         # Remove content contained in parens if present
         tokens = name.split("(")
         if len(tokens) >= 2:
@@ -58,6 +63,17 @@ class Command(BaseCommand):
         if last_word.lower() in ["west", "south", "east", "north"]:
             return (" ".join(tokens[:-1]).lower(), last_word.lower())
         return (name.lower(), None)
+
+    def import_bylaws(self):
+        np_entries = map(lambda x: NoParkingByLaw(**x), self.no_parking_bylaws)
+        restricted_entries = map(
+            lambda x: RestrictedParkingByLaw(**x), self.restricted_bylaws
+        )
+        NoParkingByLaw.objects.all().delete()
+        RestrictedParkingByLaw.objects.all().delete()
+
+        NoParkingByLaw.objects.bulk_create(np_entries)
+        RestrictedParkingByLaw.objects.bulk_create(restricted_entries)
 
     def fetch_bylaws(self, restricted):
         restricted_file = "fixtures/restricted_parking.xml"
@@ -76,10 +92,6 @@ class Command(BaseCommand):
             self.handle_between_field(attributes)
             records.append(attributes)
         return records
-        # law, _ = NoParkingByLaw.objects.update_or_create(
-        #     source_id=attributes["source_id"], defaults=attributes
-        # )
-        # law.save()
 
     def handle_between_field(self, attributes):
         if "between" not in attributes or attributes["between"] == None:
