@@ -24,7 +24,7 @@ class Command(BaseCommand):
         # the west end of X
         for law in NoParkingByLaw.objects.exclude(between__icontains="point").exclude(
             between__icontains="end"
-        )[25:45]:
+        ):
             self.handle_setting_boundaries(law)
 
     def handle_restricted_locations(self):
@@ -32,18 +32,18 @@ class Command(BaseCommand):
         # the west end of X
         for law in RestrictedParkingByLaw.objects.exclude(
             between__icontains="point"
-        ).exclude(between__icontains="end")[25:45]:
+        ).exclude(between__icontains="end"):
             self.handle_setting_boundaries(law)
 
     def handle_between_field(self, law):
         return law.between.split(" and ")
 
     def handle_setting_boundaries(self, law):
-        lat_a, lng_a = self.fetch_geocode(law.highway, law.between_street_a)
+        lat_a, lng_a = self.fetch_geocode(law.highway, law.cross_street_a)
         if lat_a and lng_a:
             law.boundary_a_lat = lat_a
             law.boundary_a_lng = lng_a
-        lat_b, lng_b = self.fetch_geocode(law.highway, law.between_street_b)
+        lat_b, lng_b = self.fetch_geocode(law.highway, law.cross_street_b)
         if lat_b and lng_b:
             law.boundary_b_lat = lat_b
             law.boundary_b_lng = lng_b

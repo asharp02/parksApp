@@ -49,8 +49,8 @@ class SetLocationDataTests(TestCase):
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
             prohibited_times_and_or_days="12 hours",
-            between_street_a="Glenholme Avenue",
-            between_street_b="Oakwood Avenue",
+            cross_street_a="Glenholme Avenue",
+            cross_street_b="Oakwood Avenue",
         )
         RestrictedParkingByLaw.objects.create(
             bylaw_no="[Repealed 2016-04-05 by By-law No. 365-2016]",
@@ -62,8 +62,8 @@ class SetLocationDataTests(TestCase):
             between="Glenholme Avenue and Oakwood Avenue",
             times_and_or_days="12 hours",
             max_period_permitted="12 hours",
-            between_street_a="Glenholme Avenue",
-            between_street_b="Oakwood Avenue",
+            cross_street_a="Glenholme Avenue",
+            cross_street_b="Oakwood Avenue",
         )
 
     def test_simple_between_field_produces_correct_lat_lng(self):
@@ -131,17 +131,17 @@ class ImportParkingDataTests(TestCase):
         rp_tree = ET.parse("fixtures/restricted_parking.xml")
         self.rp_root = rp_tree.getroot()
 
-    def test_between_street_a_and_b_fields_set_no_parking(self):
+    def test_cross_street_a_and_b_fields_set_no_parking(self):
         law = NoParkingByLaw.objects.first()
         between = law.between
-        self.assertEqual(law.between_street_a, between.split(" and ")[0])
-        self.assertEqual(law.between_street_b, between.split(" and ")[1])
+        self.assertEqual(law.cross_street_a, between.split(" and ")[0])
+        self.assertEqual(law.cross_street_b, between.split(" and ")[1])
 
-    def test_between_street_a_and_b_fields_set_restricted(self):
+    def test_cross_street_a_and_b_fields_set_restricted(self):
         law = RestrictedParkingByLaw.objects.first()
         between = law.between
-        self.assertEqual(law.between_street_a, between.split(" and ")[0])
-        self.assertEqual(law.between_street_b, between.split(" and ")[1])
+        self.assertEqual(law.cross_street_a, between.split(" and ")[0])
+        self.assertEqual(law.cross_street_b, between.split(" and ")[1])
 
     def test_noparkingbylaw_model_count_matches_xml_file(self):
         self.assertEqual(

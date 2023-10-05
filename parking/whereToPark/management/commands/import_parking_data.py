@@ -24,8 +24,18 @@ class Command(BaseCommand):
     """
 
     def handle(self, *args, **options):
+        # self.import_highways()
         self.import_no_parking()
         self.import_restricted_parking()
+
+    def import_highways(self):
+        tree = ET.parse("fixtures/no_parking.xml")
+        root = tree.getroot()
+        new_highways = []
+        for child in root:
+            for item in child:
+                if item.tag == "Highway":
+                    process_highway()
 
     def import_no_parking(self):
         tree = ET.parse("fixtures/no_parking.xml")
@@ -64,5 +74,5 @@ class Command(BaseCommand):
             return
         street_split = attributes["between"].split(" and ")
         if len(street_split) == 2:
-            attributes["between_street_a"] = street_split[0]
-            attributes["between_street_b"] = street_split[1]
+            attributes["cross_street_a"] = street_split[0]
+            attributes["cross_street_b"] = street_split[1]

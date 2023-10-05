@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw
+from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw, Highway
 
 
 class NoParkingByLawModelTest(TestCase):
@@ -19,8 +19,8 @@ class NoParkingByLawModelTest(TestCase):
             highway="Ashbury Avenue",
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
-            between_street_a="Glenholme Avenue",
-            between_street_b="Oakwood Avenue",
+            cross_street_a="Glenholme Avenue",
+            cross_street_b="Oakwood Avenue",
             prohibited_times_and_or_days="12 hours",
             boundary_a_lat=boundary_a_lat,
             boundary_a_lng=boundary_a_lng,
@@ -63,15 +63,15 @@ class NoParkingByLawModelTest(TestCase):
         field_label = law._meta.get_field("between").verbose_name
         self.assertEqual(field_label, "between")
 
-    def test_between_street_a_label(self):
+    def test_cross_street_a_label(self):
         law = NoParkingByLaw.objects.get(id=1)
-        field_label = law._meta.get_field("between_street_a").verbose_name
-        self.assertEqual(field_label, "between street a")
+        field_label = law._meta.get_field("cross_street_a").verbose_name
+        self.assertEqual(field_label, "cross street a")
 
-    def test_between_street_b_label(self):
+    def test_cross_street_b_label(self):
         law = NoParkingByLaw.objects.get(id=1)
-        field_label = law._meta.get_field("between_street_b").verbose_name
-        self.assertEqual(field_label, "between street b")
+        field_label = law._meta.get_field("cross_street_b").verbose_name
+        self.assertEqual(field_label, "cross street b")
 
     def test_prohibited_times_and_or_days_label(self):
         law = NoParkingByLaw.objects.get(id=1)
@@ -99,8 +99,8 @@ class RestrictedParkingByLawModelTest(TestCase):
             highway="Ashbury Avenue",
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
-            between_street_a="Glenholme Avenue",
-            between_street_b="Oakwood Avenue",
+            cross_street_a="Glenholme Avenue",
+            cross_street_b="Oakwood Avenue",
             times_and_or_days="10:00 a.m. to 6:00 p.m., Mon. to Fri.",
             max_period_permitted="12 hours",
             boundary_a_lat=boundary_a_lat,
@@ -144,15 +144,15 @@ class RestrictedParkingByLawModelTest(TestCase):
         field_label = law._meta.get_field("between").verbose_name
         self.assertEqual(field_label, "between")
 
-    def test_between_street_a_label(self):
+    def test_cross_street_a_label(self):
         law = RestrictedParkingByLaw.objects.get(id=1)
-        field_label = law._meta.get_field("between_street_a").verbose_name
-        self.assertEqual(field_label, "between street a")
+        field_label = law._meta.get_field("cross_street_a").verbose_name
+        self.assertEqual(field_label, "cross street a")
 
-    def test_between_street_b_label(self):
+    def test_cross_street_b_label(self):
         law = RestrictedParkingByLaw.objects.get(id=1)
-        field_label = law._meta.get_field("between_street_b").verbose_name
-        self.assertEqual(field_label, "between street b")
+        field_label = law._meta.get_field("cross_street_b").verbose_name
+        self.assertEqual(field_label, "cross street b")
 
     def test_times_and_or_day_label(self):
         law = RestrictedParkingByLaw.objects.get(id=1)
@@ -167,3 +167,24 @@ class RestrictedParkingByLawModelTest(TestCase):
     def test_str_method(self):
         law = RestrictedParkingByLaw.objects.get(id=1)
         self.assertEqual(law.__str__(), "Ashbury Avenue (North) - 1")
+
+
+class HighwayModelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        # setup objects used by all test methods
+        Highway.objects.create(name="king street", street_end="W")
+
+    def test_name_label(self):
+        highway = Highway.objects.get(id=1)
+        field_label = highway._meta.get_field("name").verbose_name
+        self.assertEqual(field_label, "name")
+
+    def test_street_end_label(self):
+        highway = Highway.objects.get(id=1)
+        field_label = highway._meta.get_field("street_end").verbose_name
+        self.assertEqual(field_label, "street end")
+
+    def test_str_method(self):
+        highway = Highway.objects.get(id=1)
+        self.assertEqual(highway.__str__(), "king street W")
