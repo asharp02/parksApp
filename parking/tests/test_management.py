@@ -41,7 +41,6 @@ class GetParkingDumpTests(SimpleTestCase):
 class SetLocationDataTests(TestCase):
     def setUp(self):
         NoParkingByLaw.objects.create(
-            bylaw_no="[2016-04-05 by By-law No. 365-2016]",
             source_id="1",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
@@ -53,7 +52,6 @@ class SetLocationDataTests(TestCase):
             cross_street_b="Oakwood Avenue",
         )
         RestrictedParkingByLaw.objects.create(
-            bylaw_no="[2016-04-05 by By-law No. 365-2016]",
             source_id="1",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
@@ -83,7 +81,6 @@ class SetLocationDataTests(TestCase):
 
     def test_complex_between_field_doesnt_save_location(self):
         NoParkingByLaw.objects.create(
-            bylaw_no="[Repealed 2016-04-05 by By-law No. 365-2016]",
             source_id="2",
             schedule="15",
             schedule_name="Parking for Restricted Periods",

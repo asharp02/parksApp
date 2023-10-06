@@ -36,15 +36,14 @@ class Command(BaseCommand):
         RestrictedParkingByLaw.objects.bulk_update(
             self.rp_with_locations, update_fields
         )
-        (self.np_with_locations)
+        print(self.np_with_locations)
         print(self.rp_with_locations)
 
     def fetch_bylaws_with_loc(self, restricted):
         laws = []
         model = RestrictedParkingByLaw if restricted else NoParkingByLaw
         exclude_q = (
-            Q(bylaw_no__icontains="repealed")
-            | Q(cross_street_a=None)
+            Q(cross_street_a=None)
             | Q(cross_street_b=None)
             | Q(boundary_status_a__in=["FS", "FNF"])
             | Q(boundary_status_b__in=["FS", "FNF"])

@@ -5,7 +5,6 @@ from django.core.management.base import BaseCommand, CommandError
 from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw, Highway
 
 FIELD_MAPPINGS = {
-    "ByLawNo": "bylaw_no",
     "ID": "source_id",
     "Schedule": "schedule",
     "ScheduleName": "schedule_name",
@@ -71,11 +70,21 @@ class Command(BaseCommand):
         restricted_entries = map(
             lambda x: RestrictedParkingByLaw(**x), self.restricted_bylaws
         )
-        NoParkingByLaw.objects.all().delete()
-        RestrictedParkingByLaw.objects.all().delete()
+        # NoParkingByLaw.objects.all().delete()
+        # RestrictedParkingByLaw.objects.all().delete()
 
-        NoParkingByLaw.objects.bulk_create(np_entries)
-        RestrictedParkingByLaw.objects.bulk_create(restricted_entries)
+        NoParkingByLaw.objects.bulk_create(
+            np_entries,
+            update_conflicts=True,
+            update_fields=["highway"],
+            unique_fields=["source_id"],
+        )
+        RestrictedParkingByLaw.objects.bulk_create(
+            restricted_entries,
+            update_conflicts=True,
+            update_fields=["highway"],
+            unique_fields=["source_id"],
+        )
 
     def fetch_bylaws(self, restricted):
         restricted_file = "fixtures/restricted_parking.xml"

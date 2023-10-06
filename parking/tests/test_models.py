@@ -12,7 +12,6 @@ class NoParkingByLawModelTest(TestCase):
         boundary_b_lng = 30.5233
         # setup objects used by all test methods
         NoParkingByLaw.objects.create(
-            bylaw_no="[Repealed 2016-04-05 by By-law No. 365-2016]",
             source_id="1",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
@@ -27,11 +26,6 @@ class NoParkingByLawModelTest(TestCase):
             boundary_b_lat=boundary_b_lat,
             boundary_b_lng=boundary_b_lng,
         )
-
-    def test_bylaw_no_label(self):
-        law = NoParkingByLaw.objects.get(id=1)
-        field_label = law._meta.get_field("bylaw_no").verbose_name
-        self.assertEqual(field_label, "bylaw no")
 
     def test_source_id(self):
         law = NoParkingByLaw.objects.get(id=1)
@@ -102,7 +96,6 @@ class RestrictedParkingByLawModelTest(TestCase):
         boundary_b_lng = 30.5233
         # setup objects used by all test methods
         RestrictedParkingByLaw.objects.create(
-            bylaw_no="[Repealed 2016-04-05 by By-law No. 365-2016]",
             source_id="1",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
@@ -118,11 +111,6 @@ class RestrictedParkingByLawModelTest(TestCase):
             boundary_b_lat=boundary_b_lat,
             boundary_b_lng=boundary_b_lng,
         )
-
-    def test_bylaw_no_label(self):
-        law = RestrictedParkingByLaw.objects.get(id=1)
-        field_label = law._meta.get_field("bylaw_no").verbose_name
-        self.assertEqual(field_label, "bylaw no")
 
     def test_source_id(self):
         law = RestrictedParkingByLaw.objects.get(id=1)
