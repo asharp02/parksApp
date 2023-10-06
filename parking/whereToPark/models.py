@@ -2,6 +2,12 @@ from django.db import models
 
 
 STREET_SIDES = (("W", "West"), ("E", "East"), ("N", "North"), ("S", "South"))
+BOUNDARY_STATUSES = (
+    ("NA", "Not Attempted"),
+    ("FS", "Fetched Success"),
+    ("FNF", "Fetched not found"),
+    ("TO", "Timed out"),
+)
 
 
 # Create your models here.
@@ -25,6 +31,12 @@ class NoParkingByLaw(models.Model):
     boundary_a_lng = models.FloatField(null=True)
     boundary_b_lat = models.FloatField(null=True)
     boundary_b_lng = models.FloatField(null=True)
+    boundary_status_a = models.CharField(
+        choices=BOUNDARY_STATUSES, max_length=30, default="NA"
+    )
+    boundary_status_b = models.CharField(
+        choices=BOUNDARY_STATUSES, max_length=30, default="NA"
+    )
 
     def __str__(self):
         return f"{self.highway} ({self.side}) - {self.source_id}"
@@ -52,6 +64,12 @@ class RestrictedParkingByLaw(models.Model):
     boundary_a_lng = models.FloatField(null=True)
     boundary_b_lat = models.FloatField(null=True)
     boundary_b_lng = models.FloatField(null=True)
+    boundary_status_a = models.CharField(
+        choices=BOUNDARY_STATUSES, max_length=30, default="NA"
+    )
+    boundary_status_b = models.CharField(
+        choices=BOUNDARY_STATUSES, max_length=30, default="NA"
+    )
 
     def __str__(self):
         return f"{self.highway} ({self.side}) - {self.source_id}"

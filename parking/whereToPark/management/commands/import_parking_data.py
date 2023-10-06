@@ -59,10 +59,12 @@ class Command(BaseCommand):
         tokens = name.split(" ")
         if len(tokens) <= 1:
             return (None, None)
-        last_word = tokens[-1]
-        if last_word.lower() in ["west", "south", "east", "north"]:
-            return (" ".join(tokens[:-1]).lower(), last_word.lower())
+
         return (name.lower(), None)
+        # last_word = tokens[-1]
+        # if last_word.lower() in ["west", "south", "east", "north"]:
+        #     return (" ".join(tokens[:-1]).lower(), last_word.lower())
+        # return (name.lower(), None)
 
     def import_bylaws(self):
         np_entries = map(lambda x: NoParkingByLaw(**x), self.no_parking_bylaws)
@@ -96,7 +98,11 @@ class Command(BaseCommand):
     def handle_between_field(self, attributes):
         if "between" not in attributes or attributes["between"] == None:
             return
-        street_split = attributes["between"].split(" and ")
-        if len(street_split) == 2:
-            attributes["cross_street_a"] = street_split[0]
-            attributes["cross_street_b"] = street_split[1]
+        cross_streets = attributes["between"].split(" and ")
+        if len(cross_streets) != 2:
+            return
+        found_a = Highway.objects.filter(name=cross_streets[0].lower()).count() > 0
+        found_b = Highway.objects.filter(name=cross_streets[1].lower()).count() > 0
+        if found_a and found_b:
+            attributes["cross_street_a"] = cross_streets[0].lower()
+            attributes["cross_street_b"] = cross_streets[1].lower()

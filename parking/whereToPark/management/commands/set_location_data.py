@@ -6,6 +6,7 @@ from requests.adapters import HTTPAdapter
 from xml.etree import ElementTree as ET
 from decimal import Decimal
 
+from django.db.models import Q
 from django.core.management.base import BaseCommand, CommandError
 
 from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw
@@ -15,39 +16,56 @@ URL_PARAMS = "&city=toronto&geoit=xml"
 
 
 class Command(BaseCommand):
+    # represents list of np/rp bylaw objs with updated boundaries
+    np_with_locations = []
+    rp_with_locations = []
+    timeout_count = 0
+
     def handle(self, *args, **options):
-        self.handle_no_parking_locations()
-        self.handle_restricted_locations()
+        self.np_with_locations = self.fetch_bylaws_with_loc(False)
+        self.rp_with_locations = self.fetch_bylaws_with_loc(True)
+        update_fields = [
+            "boundary_a_lat",
+            "boundary_a_lng",
+            "boundary_b_lat",
+            "boundary_b_lng",
+            "boundary_status_a",
+            "boundary_status_b",
+        ]
+        NoParkingByLaw.objects.bulk_update(self.np_with_locations, update_fields)
+        RestrictedParkingByLaw.objects.bulk_update(
+            self.rp_with_locations, update_fields
+        )
+        (self.np_with_locations)
+        print(self.rp_with_locations)
 
-    def handle_no_parking_locations(self):
-        # we want to avoid complex between values ie. "a point 5 metres from" or
-        # the west end of X
-        for law in NoParkingByLaw.objects.exclude(between__icontains="point").exclude(
-            between__icontains="end"
-        ):
-            self.handle_setting_boundaries(law)
+    def fetch_bylaws_with_loc(self, restricted):
+        laws = []
+        model = RestrictedParkingByLaw if restricted else NoParkingByLaw
+        exclude_q = (
+            Q(bylaw_no__icontains="repealed")
+            | Q(cross_street_a=None)
+            | Q(cross_street_b=None)
+            | Q(boundary_status_a__in=["FS", "FNF"])
+            | Q(boundary_status_b__in=["FS", "FNF"])
+        )
+        for bylaw in model.objects.exclude(exclude_q)[:5]:
+            self.set_boundaries(bylaw)
+            laws.append(bylaw)
+            if self.timeout_count >= 5:
+                break
+        return laws
 
-    def handle_restricted_locations(self):
-        # we want to avoid complex between values ie. "a point 5 metres from" or
-        # the west end of X
-        for law in RestrictedParkingByLaw.objects.exclude(
-            between__icontains="point"
-        ).exclude(between__icontains="end"):
-            self.handle_setting_boundaries(law)
-
-    def handle_between_field(self, law):
-        return law.between.split(" and ")
-
-    def handle_setting_boundaries(self, law):
-        lat_a, lng_a = self.fetch_geocode(law.highway, law.cross_street_a)
-        if lat_a and lng_a:
+    def set_boundaries(self, law):
+        (lat_a, lng_a), status_a = self.fetch_geocode(law.highway, law.cross_street_a)
+        (lat_b, lng_b), status_b = self.fetch_geocode(law.highway, law.cross_street_b)
+        if lat_a and lng_a and lat_b and lng_b:
             law.boundary_a_lat = lat_a
             law.boundary_a_lng = lng_a
-        lat_b, lng_b = self.fetch_geocode(law.highway, law.cross_street_b)
-        if lat_b and lng_b:
             law.boundary_b_lat = lat_b
             law.boundary_b_lng = lng_b
-        law.save()
+        law.boundary_status_a = status_a
+        law.boundary_status_b = status_b
 
     def fetch_geocode(self, highway, cross_street):
         """Handles calling the geocoder API endpoint to fetch lat/lng data
@@ -70,18 +88,27 @@ class Command(BaseCommand):
         else:
             tree = ET.fromstring(resp.content)
             return self.parse_geocode_xml(tree)
-        return None, None
+        self.timeout_count += 1
+        print(f"Timed out on {highway} at {cross_street}, gave up")
+        return (None, None), "TO"
 
     def parse_geocode_xml(self, tree):
         """Given an element tree with XML from geocoder API, parse latitude and longitude
         fields.
         """
         lat, lng = None, None
+        confidence_score = 0
         for child in tree:
+            if child.tag == "error":
+                return (None, None), "TO"
             if child.tag == "latt" and child.text:
                 lat = float(child.text)
-                lat = Decimal(lat)
             elif child.tag == "longt" and child.text:
                 lng = float(child.text)
-                lng = Decimal(lng)
-        return lat, lng
+            elif child.tag == "confidence" and child.text:
+                confidence_score = child.text
+
+        if float(confidence_score) < 0.5:
+            print("Geocode for intersection not found")
+            return (None, None), "FNF"
+        return (lat, lng), "FS"
