@@ -98,6 +98,8 @@ class Command(BaseCommand):
             for item in child:
                 if item.tag not in FIELD_MAPPINGS.keys():
                     continue
+                if item.tag == "ByLawNo":  # Bylaw has been repealed, we can skip
+                    break
                 attributes[FIELD_MAPPINGS[item.tag]] = item.text
                 attributes["source_id"] = int(attributes["source_id"])
             self.handle_between_field(attributes)
