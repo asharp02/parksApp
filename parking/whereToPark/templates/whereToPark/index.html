@@ -25,15 +25,32 @@
         map = new mapboxgl.Map({
             container: "map", // container ID
             style: "mapbox://styles/mapbox/streets-v12", // style URL
-            // center: [userLongitude, userLatitude], // starting position [lng, lat]
-            zoom: 2.5, // starting zoom
+            center: [-79.3832, 43.6532], // starting position [lng, lat]
+            zoom: 10.5, // starting zoom
         });
-        let marker;
-        let coord;
-        {% for bylaw in bylaws %}
-            coord = [{{ bylaw.boundary_a_lng }}, {{ bylaw.boundary_a_lat }} ]
-            marker = new mapboxgl.Marker({ color: "#50C878" })
-                .setLngLat(coord)
+        let marker_a;
+        let marker_b;
+        let coord_a;
+        let coord_b;
+        {% for bylaw in rp_bylaws %}
+            coord_a = [{{ bylaw.boundary_a_lng }}, {{ bylaw.boundary_a_lat }} ]
+            coord_b = [{{ bylaw.boundary_b_lng }}, {{ bylaw.boundary_b_lat }} ]
+            marker_a = new mapboxgl.Marker({ color: "#50C878" })
+                .setLngLat(coord_a)
+                .addTo(map);
+            marker_b = new mapboxgl.Marker({ color: "#50C878" })
+                .setLngLat(coord_b)
+                .addTo(map);
+        {% endfor %}
+
+        {% for bylaw in np_bylaws %}
+            coord_a = [{{ bylaw.boundary_a_lng }}, {{ bylaw.boundary_a_lat }} ]
+            coord_b = [{{ bylaw.boundary_b_lng }}, {{ bylaw.boundary_b_lat }} ]
+            marker_a = new mapboxgl.Marker({ color: "#ff0000" })
+                .setLngLat(coord_a)
+                .addTo(map);
+            marker_b = new mapboxgl.Marker({ color: "#ff0000" })
+                .setLngLat(coord_b)
                 .addTo(map);
         {% endfor %}
         }
