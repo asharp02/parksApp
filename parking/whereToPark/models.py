@@ -10,6 +10,14 @@ BOUNDARY_STATUSES = (
 )
 
 
+class Intersection(models.Model):
+    main_street = models.ForeignKey("Highway", on_delete=models.CASCADE)
+    cross_street = models.ForeignKey("Highway", on_delete=models.CASCADE)
+    lat = models.FloatField(null=True)
+    lng = models.FloatField(null=True)
+    status = models.CharField(choices=BOUNDARY_STATUSES, max_length=3, default="NA")
+
+
 class ByLaw(models.Model):
     """Abstract base model class used in both NoParking and RestrictedParking
     models. This allows us to share fields across models and setting it to be
@@ -18,21 +26,11 @@ class ByLaw(models.Model):
 
     schedule = models.CharField(max_length=10)
     schedule_name = models.CharField(max_length=100)
-    highway = models.CharField(max_length=100)
+    highway = models.ForeignKey("Highway", on_delete=models.CASCADE)
     side = models.CharField(max_length=10, null=True)
+    boundary_start = models.ForeignKey("Intersection", on_delete=models.CASCADE)
+    boundary_end = models.ForeignKey("Intersection", on_delete=models.CASCADE)
     between = models.CharField(max_length=200, null=True)
-    cross_street_a = models.CharField(max_length=200, null=True)
-    cross_street_b = models.CharField(max_length=200, null=True)
-    boundary_a_lat = models.FloatField(null=True)
-    boundary_a_lng = models.FloatField(null=True)
-    boundary_b_lat = models.FloatField(null=True)
-    boundary_b_lng = models.FloatField(null=True)
-    boundary_status_a = models.CharField(
-        choices=BOUNDARY_STATUSES, max_length=30, default="NA"
-    )
-    boundary_status_b = models.CharField(
-        choices=BOUNDARY_STATUSES, max_length=30, default="NA"
-    )
 
     class Meta:
         abstract = True
