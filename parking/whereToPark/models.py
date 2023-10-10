@@ -1,4 +1,5 @@
 from django.db import models
+from polymorphic.models import PolymorphicModel
 
 
 STREET_SIDES = (("W", "West"), ("E", "East"), ("N", "North"), ("S", "South"))
@@ -11,29 +12,38 @@ BOUNDARY_STATUSES = (
 
 
 class Intersection(models.Model):
-    main_street = models.ForeignKey("Highway", on_delete=models.CASCADE)
-    cross_street = models.ForeignKey("Highway", on_delete=models.CASCADE)
+    main_street = models.ForeignKey(
+        "Highway", on_delete=models.CASCADE, related_name="main_street"
+    )
+    cross_street = models.ForeignKey(
+        "Highway", on_delete=models.CASCADE, related_name="cross_street"
+    )
     lat = models.FloatField(null=True)
     lng = models.FloatField(null=True)
     status = models.CharField(choices=BOUNDARY_STATUSES, max_length=3, default="NA")
 
+    def __str__(self):
+        return f"{self.main_street} at {self.cross_street} ({self.status})"
 
-class ByLaw(models.Model):
-    """Abstract base model class used in both NoParking and RestrictedParking
-    models. This allows us to share fields across models and setting it to be
-    abstract ensures a DB table is not created.
+
+class ByLaw(PolymorphicModel):
+    """
+    Polymorphic model used (abstract base class provided by django-polymorphic) in both NoParking
+    and RestrictedParking models. This allows us to share fields across models
+    and setting it to be abstract ensures a DB table is not created.
     """
 
     schedule = models.CharField(max_length=10)
     schedule_name = models.CharField(max_length=100)
     highway = models.ForeignKey("Highway", on_delete=models.CASCADE)
     side = models.CharField(max_length=10, null=True)
-    boundary_start = models.ForeignKey("Intersection", on_delete=models.CASCADE)
-    boundary_end = models.ForeignKey("Intersection", on_delete=models.CASCADE)
+    boundary_start = models.ForeignKey(
+        "Intersection", on_delete=models.CASCADE, related_name="boundary_start"
+    )
+    boundary_end = models.ForeignKey(
+        "Intersection", on_delete=models.CASCADE, related_name="boundary_end"
+    )
     between = models.CharField(max_length=200, null=True)
-
-    class Meta:
-        abstract = True
 
 
 class NoParkingByLaw(ByLaw):
@@ -66,10 +76,6 @@ class RestrictedParkingByLaw(ByLaw):
 
 class Highway(models.Model):
     name = models.CharField(max_length=100)
-    street_end = models.CharField(choices=STREET_SIDES, max_length=10, null=True)
-
-    class Meta:
-        unique_together = ["name", "street_end"]
 
     def __str__(self):
-        return f"{self.name} {self.street_end}" if self.street_end else self.name
+        return self.name

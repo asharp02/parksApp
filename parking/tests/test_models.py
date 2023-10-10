@@ -11,19 +11,19 @@ from whereToPark.models import (
 class ByLawModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        highway = Highway.objects.create(name="queen street", street_end="W")
-        cross_street_1 = Highway.objects.create(name="dowling avenue", street_end="W")
-        cross_street_2 = Highway.objects.create(name="jameson avenue", street_end="W")
+        cls.highway = Highway.objects.create(name="queen street")
+        cross_street_1 = Highway.objects.create(name="dowling avenue")
+        cross_street_2 = Highway.objects.create(name="jameson avenue")
 
-        intersection_1 = Intersection.objects.create(
-            main_street=highway,
+        cls.intersection_1 = Intersection.objects.create(
+            main_street=cls.highway,
             cross_street=cross_street_1,
             lat=-90.5203,
             lng=29.5233,
             status="FNF",
         )
-        intersection_2 = Intersection.objects.create(
-            main_street=highway,
+        cls.intersection_2 = Intersection.objects.create(
+            main_street=cls.highway,
             cross_street=cross_street_2,
             lat=-90.5203,
             lng=29.5233,
@@ -40,9 +40,9 @@ class NoParkingByLawModelTest(ByLawModelTest):
             source_id="1",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
-            highway=highway,
-            boundary_start=intersection_1,
-            boundary_end=intersection_2,
+            highway=cls.highway,
+            boundary_start=cls.intersection_1,
+            boundary_end=cls.intersection_2,
             side="North",
             between="Dowling Avenue and Jameson Avenue",
             prohibited_times_and_or_days="12 hours",
@@ -95,42 +95,25 @@ class NoParkingByLawModelTest(ByLawModelTest):
 
     def test_str_method(self):
         law = NoParkingByLaw.objects.get(id=1)
-        self.assertEqual(law.__str__(), "Queen Street (West) - 1")
+        self.assertEqual(law.__str__(), "queen street (North) - 1")
 
 
 class RestrictedParkingByLawModelTest(ByLawModelTest):
     @classmethod
     def setUpTestData(cls):
-        highway = Highway.objects.create(name="queen street", street_end="W")
-        cross_street_1 = Highway.objects.create(name="dowling avenue", street_end="W")
-        cross_street_2 = Highway.objects.create(name="jameson avenue", street_end="W")
-
-        intersection_1 = Intersection.objects.create(
-            main_street=highway,
-            cross_street=cross_street_1,
-            lat=-90.5203,
-            lng=29.5233,
-            status="FNF",
-        )
-        intersection_2 = Intersection.objects.create(
-            main_street=highway,
-            cross_street=cross_street_2,
-            lat=-90.5203,
-            lng=29.5233,
-            status="FNF",
-        )
         # setup objects used by all test methods
+        super().setUpTestData()
         RestrictedParkingByLaw.objects.create(
             source_id="1",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
-            highway=highway,
+            highway=cls.highway,
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
             times_and_or_days="10:00 a.m. to 6:00 p.m., Mon. to Fri.",
             max_period_permitted="12 hours",
-            boundary_start=intersection_1,
-            boundary_end=intersection_2,
+            boundary_start=cls.intersection_1,
+            boundary_end=cls.intersection_2,
         )
 
     def test_source_id(self):
@@ -185,38 +168,33 @@ class RestrictedParkingByLawModelTest(ByLawModelTest):
 
     def test_str_method(self):
         law = RestrictedParkingByLaw.objects.get(id=1)
-        self.assertEqual(law.__str__(), "Ashbury Avenue (North) - 1")
+        self.assertEqual(law.__str__(), "queen street (North) - 1")
 
 
 class HighwayModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         # setup objects used by all test methods
-        Highway.objects.create(name="king street", street_end="W")
+        Highway.objects.create(name="king street")
 
     def test_name_label(self):
         highway = Highway.objects.get(id=1)
         field_label = highway._meta.get_field("name").verbose_name
         self.assertEqual(field_label, "name")
 
-    def test_street_end_label(self):
-        highway = Highway.objects.get(id=1)
-        field_label = highway._meta.get_field("street_end").verbose_name
-        self.assertEqual(field_label, "street end")
-
     def test_str_method(self):
         highway = Highway.objects.get(id=1)
-        self.assertEqual(highway.__str__(), "king street W")
+        self.assertEqual(highway.__str__(), "king street")
 
 
 class IntersectionModelTest(TestCase):
     @classmethod
-    def setUpTestData(cls, self):
+    def setUpTestData(cls):
         # setup objects used by all test methods
-        main_street = Highway.objects.create(name="king street", street_end="W")
-        cross_street = Highway.objects.create(name="dowling avenue", street_end="W")
+        main_street = Highway.objects.create(name="king street")
+        cross_street = Highway.objects.create(name="dowling avenue")
 
-        self.intersection = Intersection.objects.create(
+        cls.intersection = Intersection.objects.create(
             main_street=main_street,
             cross_street=cross_street,
             lat=-90.5203,
