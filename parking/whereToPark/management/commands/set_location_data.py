@@ -9,7 +9,7 @@ from decimal import Decimal
 from django.db.models import Q
 from django.core.management.base import BaseCommand, CommandError
 
-from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw
+from whereToPark.models import ByLaw
 
 GEOCODER_API_ENDPOINT = "https://geocoder.ca/"
 URL_PARAMS = "&city=toronto&geoit=xml"

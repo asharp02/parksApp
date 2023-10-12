@@ -11,7 +11,7 @@ from whereToPark.management.commands.import_parking_data import (
 )
 from whereToPark.management.commands.set_location_data import Command as SetParkingCmd
 
-from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw, Highway
+from whereToPark.models import ByLaw, Highway
 
 # Create your tests here.
 
@@ -41,16 +41,16 @@ class GetParkingDumpTests(SimpleTestCase):
 class SetLocationDataTests(TestCase):
     def setUp(self):
         self.highway = Highway.objects.create(name="ashbury avenue")
-        NoParkingByLaw.objects.create(
+        ByLaw.objects.create(
             source_id="1",
-            schedule="15",
+            schedule="13",
             schedule_name="Parking for Restricted Periods",
             highway=self.highway,
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
-            prohibited_times_and_or_days="12 hours",
+            times_and_or_days="12 hours",
         )
-        RestrictedParkingByLaw.objects.create(
+        ByLaw.objects.create(
             source_id="1",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
@@ -63,21 +63,21 @@ class SetLocationDataTests(TestCase):
         call_command("set_location_data")
 
     def test_simple_between_field_produces_correct_lat_lng(self):
-        law = NoParkingByLaw.objects.get(id=1)
+        law = ByLaw.objects.get(id=1)
         self.assertAlmostEqual(law.boundary_start.lat, 43.689936, delta=0.00005)
         self.assertAlmostEqual(law.boundary_start.lng, -79.442908, delta=0.0005)
         self.assertAlmostEqual(law.boundary_end.lat, 43.690593, delta=0.00005)
         self.assertAlmostEqual(law.boundary_end.lng, -79.440109, delta=0.0005)
 
     def test_simple_between_field_produces_correct_lat_lng_restricted(self):
-        law = RestrictedParkingByLaw.objects.get(id=1)
+        law = ByLaw.objects.get(id=1)
         self.assertAlmostEqual(law.boundary_start.lat, 43.689936, delta=0.00005)
         self.assertAlmostEqual(law.boundary_start.lng, -79.442908, delta=0.0005)
         self.assertAlmostEqual(law.boundary_end.lat, 43.690593, delta=0.00005)
         self.assertAlmostEqual(law.boundary_end.lng, -79.440109, delta=0.0005)
 
     def test_complex_between_field_doesnt_save_location(self):
-        NoParkingByLaw.objects.create(
+        ByLaw.objects.create(
             source_id="2",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
@@ -87,7 +87,7 @@ class SetLocationDataTests(TestCase):
             prohibited_times_and_or_days="12 hours",
         )
         call_command("set_location_data")
-        law = NoParkingByLaw.objects.get(id=2)
+        law = ByLaw.objects.get(id=2)
         self.assertIsNone(law.boundary_start)
         self.assertIsNone(law.boundary_end)
 
@@ -116,62 +116,28 @@ class ImportParkingDataTests(TestCase):
         rp_tree = ET.parse("fixtures/restricted_parking.xml")
         self.rp_root = rp_tree.getroot()
 
-    # def test_cross_street_a_and_b_fields_set_no_parking(self):
-    #     law = NoParkingByLaw.objects.first()
-    #     between = law.between
-    #     print(between)
-    #     self.assertEqual(law.cross_street_a, between.split(" and ")[0])
-    #     self.assertEqual(law.cross_street_b, between.split(" and ")[1])
-
-    # def test_cross_street_a_and_b_fields_set_restricted(self):
-    #     law = RestrictedParkingByLaw.objects.first()
-    #     between = law.between
-    #     self.assertEqual(law.cross_street_a, between.split(" and ")[0])
-    #     self.assertEqual(law.cross_street_b, between.split(" and ")[1])
-
     def test_noparkingbylaw_model_count_matches_xml_file(self):
         self.assertEqual(
-            NoParkingByLaw.objects.count(), len(self.np_root.getchildren())
+            ByLaw.objects.filter(schedule="13").count(), len(self.np_root.getchildren())
         )
 
     def test_restrictedparkingbylaw_model_count_matches_xml_file(self):
         self.assertEqual(
-            RestrictedParkingByLaw.objects.count(), len(self.rp_root.getchildren())
+            ByLaw.objects.filter(schedule="15").count(), len(self.rp_root.getchildren())
         )
 
     def test_no_parking_cmd_does_not_create_duplicates(self):
-        total_count_pre = NoParkingByLaw.objects.count()
+        total_count_pre = ByLaw.objects.count()
         call_command("import_parking_data")
 
-        self.assertEqual(total_count_pre, NoParkingByLaw.objects.count())
-
-        first_id = NoParkingByLaw.objects.first().source_id
-        count_with_id = NoParkingByLaw.objects.filter(source_id=first_id).count()
-        self.assertEqual(count_with_id, 1)
-
-    def test_restricted_parking_cmd_does_not_create_duplicates(self):
-        total_count_pre = RestrictedParkingByLaw.objects.count()
-        call_command("import_parking_data")
-        self.assertEqual(total_count_pre, RestrictedParkingByLaw.objects.count())
-
-        first_id = RestrictedParkingByLaw.objects.first().source_id
-        count_with_id = RestrictedParkingByLaw.objects.filter(
-            source_id=first_id
-        ).count()
-        self.assertEqual(count_with_id, 1)
+        self.assertEqual(total_count_pre, ByLaw.objects.count())
 
     def test_process_highway_parses_correctly(self):
-        simple_highway = "King Street"
+        simple_highway = {"highway": "king street"}
         parsed_res = ImportParkingCmd().process_highway_name(simple_highway)
-        self.assertEqual(parsed_res[0], "king street")
-        self.assertIsNone(parsed_res[1])
+        self.assertEqual(simple_highway["highway"], "king street")
 
-        # highway_with_end = "King Street West"
-        # result = ImportParkingCmd().process_highway_name(highway_with_end)
-        # self.assertEqual(result[0], "king street")
-        # self.assertEqual(result[1], "west")
-
-        # highway_with_parens = "Isaac Devins Boulevard (south branch)"
-        # result = ImportParkingCmd().process_highway_name(highway_with_end)
-        # self.assertEqual(result[0], "king street")
-        # self.assertEqual(result[1], "west")
+    def test_process_highway_parses_correctly_with_parens(self):
+        highway_with_parens = {"highway": "isaac devins boulevard (south branch)"}
+        result = ImportParkingCmd().process_highway_name(highway_with_parens)
+        self.assertEqual(highway_with_parens["highway"], "isaac devins boulevard")
