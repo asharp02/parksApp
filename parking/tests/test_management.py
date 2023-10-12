@@ -11,7 +11,7 @@ from whereToPark.management.commands.import_parking_data import (
 )
 from whereToPark.management.commands.set_location_data import Command as SetParkingCmd
 
-from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw
+from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw, Highway
 
 # Create your tests here.
 
@@ -40,61 +40,56 @@ class GetParkingDumpTests(SimpleTestCase):
 
 class SetLocationDataTests(TestCase):
     def setUp(self):
+        self.highway = Highway.objects.create(name="ashbury avenue")
         NoParkingByLaw.objects.create(
             source_id="1",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
-            highway="Ashbury Avenue",
+            highway=self.highway,
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
             prohibited_times_and_or_days="12 hours",
-            cross_street_a="Glenholme Avenue",
-            cross_street_b="Oakwood Avenue",
         )
         RestrictedParkingByLaw.objects.create(
             source_id="1",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
-            highway="Ashbury Avenue",
+            highway=self.highway,
             side="North",
             between="Glenholme Avenue and Oakwood Avenue",
             times_and_or_days="12 hours",
             max_period_permitted="12 hours",
-            cross_street_a="Glenholme Avenue",
-            cross_street_b="Oakwood Avenue",
         )
         call_command("set_location_data")
 
     def test_simple_between_field_produces_correct_lat_lng(self):
         law = NoParkingByLaw.objects.get(id=1)
-        self.assertAlmostEqual(law.boundary_a_lat, 43.689936, delta=0.00005)
-        self.assertAlmostEqual(law.boundary_a_lng, -79.442908, delta=0.0005)
-        self.assertAlmostEqual(law.boundary_b_lat, 43.690593, delta=0.00005)
-        self.assertAlmostEqual(law.boundary_b_lng, -79.440109, delta=0.0005)
+        self.assertAlmostEqual(law.boundary_start.lat, 43.689936, delta=0.00005)
+        self.assertAlmostEqual(law.boundary_start.lng, -79.442908, delta=0.0005)
+        self.assertAlmostEqual(law.boundary_end.lat, 43.690593, delta=0.00005)
+        self.assertAlmostEqual(law.boundary_end.lng, -79.440109, delta=0.0005)
 
     def test_simple_between_field_produces_correct_lat_lng_restricted(self):
         law = RestrictedParkingByLaw.objects.get(id=1)
-        self.assertAlmostEqual(law.boundary_a_lat, 43.689936, delta=0.00005)
-        self.assertAlmostEqual(law.boundary_a_lng, -79.442908, delta=0.0005)
-        self.assertAlmostEqual(law.boundary_b_lat, 43.690593, delta=0.00005)
-        self.assertAlmostEqual(law.boundary_b_lng, -79.440109, delta=0.0005)
+        self.assertAlmostEqual(law.boundary_start.lat, 43.689936, delta=0.00005)
+        self.assertAlmostEqual(law.boundary_start.lng, -79.442908, delta=0.0005)
+        self.assertAlmostEqual(law.boundary_end.lat, 43.690593, delta=0.00005)
+        self.assertAlmostEqual(law.boundary_end.lng, -79.440109, delta=0.0005)
 
     def test_complex_between_field_doesnt_save_location(self):
         NoParkingByLaw.objects.create(
             source_id="2",
             schedule="15",
             schedule_name="Parking for Restricted Periods",
-            highway="Ashbury Avenue",
+            highway=self.highway,
             side="North",
             between="Brock Avenue and the west end of Abbs Street",
             prohibited_times_and_or_days="12 hours",
         )
         call_command("set_location_data")
         law = NoParkingByLaw.objects.get(id=2)
-        self.assertIsNone(law.boundary_a_lat)
-        self.assertIsNone(law.boundary_a_lng)
-        self.assertIsNone(law.boundary_b_lat)
-        self.assertIsNone(law.boundary_b_lng)
+        self.assertIsNone(law.boundary_start)
+        self.assertIsNone(law.boundary_end)
 
     def test_parse_geocode_xml(self):
         sample_xml = "<geodata>\

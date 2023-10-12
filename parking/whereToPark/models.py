@@ -13,10 +13,10 @@ BOUNDARY_STATUSES = (
 
 class Intersection(models.Model):
     main_street = models.ForeignKey(
-        "Highway", on_delete=models.CASCADE, related_name="main_street"
+        "Highway", on_delete=models.CASCADE, related_name="main_street", null=True
     )
     cross_street = models.ForeignKey(
-        "Highway", on_delete=models.CASCADE, related_name="cross_street"
+        "Highway", on_delete=models.CASCADE, related_name="cross_street", null=True
     )
     lat = models.FloatField(null=True)
     lng = models.FloatField(null=True)
@@ -24,6 +24,9 @@ class Intersection(models.Model):
 
     def __str__(self):
         return f"{self.main_street} at {self.cross_street} ({self.status})"
+
+    class Meta:
+        unique_together = ["main_street", "cross_street"]
 
 
 class ByLaw(PolymorphicModel):
@@ -38,10 +41,13 @@ class ByLaw(PolymorphicModel):
     highway = models.ForeignKey("Highway", on_delete=models.CASCADE)
     side = models.CharField(max_length=10, null=True)
     boundary_start = models.ForeignKey(
-        "Intersection", on_delete=models.CASCADE, related_name="boundary_start"
+        "Intersection",
+        on_delete=models.CASCADE,
+        related_name="boundary_start",
+        null=True,
     )
     boundary_end = models.ForeignKey(
-        "Intersection", on_delete=models.CASCADE, related_name="boundary_end"
+        "Intersection", on_delete=models.CASCADE, related_name="boundary_end", null=True
     )
     between = models.CharField(max_length=200, null=True)
 
@@ -75,7 +81,7 @@ class RestrictedParkingByLaw(ByLaw):
 
 
 class Highway(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
