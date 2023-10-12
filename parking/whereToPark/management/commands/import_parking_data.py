@@ -7,6 +7,7 @@ from whereToPark.models import (
     RestrictedParkingByLaw,
     Highway,
     Intersection,
+    ByLaw,
 )
 
 FIELD_MAPPINGS = {
@@ -30,32 +31,37 @@ class Command(BaseCommand):
     no_parking_bylaws = []
     restricted_bylaws = []
     intersections = []
-    intersections_created = []
 
     def handle(self, *args, **options):
         self.no_parking_bylaws = self.fetch_bylaws(False)
         self.restricted_bylaws = self.fetch_bylaws(True)
         self.import_highways()
-        # self.import_bylaws()
         self.import_intersections()
+        self.import_bylaws()
 
     def import_intersections(self):
         objs = []
         for bylaw in self.no_parking_bylaws + self.restricted_bylaws:
             intersections = self.parse_between_field(bylaw)
-            for main, cross in intersections:
-                print(main, cross)
+            bylaw["highway"] = None
+            bylaw["boundary_start"] = None
+            for i, (main, cross) in enumerate(intersections):
                 if not main or not cross:
                     continue
                 highway_main = Highway.objects.filter(name=main).first()
                 highway_cross = Highway.objects.filter(name=cross).first()
-                objs.append(
-                    Intersection(main_street=highway_main, cross_street=highway_cross)
+                intersection_obj, _ = Intersection.objects.get_or_create(
+                    main_street=highway_main, cross_street=highway_cross
                 )
+                intersection_obj.save()
+                bylaw["highway"] = highway_main
+                if i == 0:
+                    bylaw["boundary_start"] = intersection_obj
+                else:
+                    bylaw["boundary_end"] = intersection_obj
+                objs.append(intersection_obj)
 
-        self.intersections_created = Intersection.objects.bulk_create(
-            objs, ignore_conflicts=True
-        )
+        Intersection.objects.bulk_create(objs, ignore_conflicts=True)
 
     def import_highways(self):
         highway_names = map(
@@ -92,22 +98,20 @@ class Command(BaseCommand):
         # return (name.lower(), None)
 
     def import_bylaws(self):
-        np_entries = map(lambda x: NoParkingByLaw(**x), self.no_parking_bylaws)
-        restricted_entries = map(
-            lambda x: RestrictedParkingByLaw(**x), self.restricted_bylaws
-        )
-
-        intersections_by_pk = self.fetch_intersection_objs()
-
-        NoParkingByLaw.objects.bulk_create(np_entries, ignore_conflicts=True)
-        RestrictedParkingByLaw.objects.bulk_create(
-            restricted_entries, ignore_conflicts=True
-        )
-
-    def fetch_intersection_objs(self):
-        res = {}
-        for intersection in self.intersections_created:
-            pass
+        for bl in self.no_parking_bylaws:
+            if bl["highway"] == None:
+                continue
+            obj, created = NoParkingByLaw.objects.update_or_create(
+                source_id=bl["source_id"], defaults=bl
+            )
+            obj.save()
+        for bl in self.restricted_bylaws:
+            if bl["highway"] == None:
+                continue
+            obj, created = RestrictedParkingByLaw.objects.update_or_create(
+                source_id=bl["source_id"], defaults=bl
+            )
+            obj.save()
 
     def fetch_bylaws(self, restricted):
         restricted_file = "fixtures/restricted_parking.xml"
@@ -124,10 +128,10 @@ class Command(BaseCommand):
                 if item.tag == "ByLawNo":  # Bylaw has been repealed, we can skip
                     break
                 if not item.text:
-                    continue
+                    break
                 attributes[FIELD_MAPPINGS[item.tag]] = item.text.lower()
                 attributes["source_id"] = int(attributes["source_id"])
-            self.handle_between_field(attributes)
+            self.parse_between_field(attributes)
             records.append(attributes)
         return records
 
@@ -136,7 +140,6 @@ class Command(BaseCommand):
         if "between" not in attributes or attributes["between"] == None:
             return res
         cross_streets = attributes["between"].split(" and ")
-        print(cross_streets)
         if len(cross_streets) != 2:
             return res
         cross_street_a = cross_streets[0].lower()
