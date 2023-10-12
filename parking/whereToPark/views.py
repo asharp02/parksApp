@@ -2,8 +2,8 @@ import json
 
 from django.shortcuts import render
 from django.db.models import Q
-from whereToPark.models import NoParkingByLaw as np
-from whereToPark.models import RestrictedParkingByLaw as rp
+from whereToPark.models import ByLaw as np
+from whereToPark.models import ByLaw as rp
 
 
 # Create your views here.

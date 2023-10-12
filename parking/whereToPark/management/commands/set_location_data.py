@@ -111,3 +111,43 @@ class Command(BaseCommand):
             print("Geocode for intersection not found")
             return (None, None), "FNF"
         return (lat, lng), "FS"
+
+    def parse_between_field(self, attributes):
+        res = []
+        if "between" not in attributes or attributes["between"] == None:
+            return res
+        cross_streets = attributes["between"].split(" and ")
+        if len(cross_streets) != 2:
+            return res
+        cross_street_a = cross_streets[0].lower()
+        cross_street_b = cross_streets[1].lower()
+        found_a = Highway.objects.filter(name=cross_street_a).count() > 0
+        found_b = Highway.objects.filter(name=cross_street_b).count() > 0
+        if found_a and found_b:
+            res.append((attributes["highway"], cross_street_a))
+            res.append((attributes["highway"], cross_street_b))
+        return res
+
+    def import_intersections(self):
+        objs = []
+        for bylaw in self.no_parking_bylaws + self.restricted_bylaws:
+            intersections = self.parse_between_field(bylaw)
+            bylaw["highway"] = None
+            bylaw["boundary_start"] = None
+            for i, (main, cross) in enumerate(intersections):
+                if not main or not cross:
+                    continue
+                highway_main = Highway.objects.filter(name=main).first()
+                highway_cross = Highway.objects.filter(name=cross).first()
+                intersection_obj, _ = Intersection.objects.get_or_create(
+                    main_street=highway_main, cross_street=highway_cross
+                )
+                intersection_obj.save()
+                bylaw["highway"] = highway_main
+                if i == 0:
+                    bylaw["boundary_start"] = intersection_obj
+                else:
+                    bylaw["boundary_end"] = intersection_obj
+                objs.append(intersection_obj)
+
+        Intersection.objects.bulk_create(objs, ignore_conflicts=True)
