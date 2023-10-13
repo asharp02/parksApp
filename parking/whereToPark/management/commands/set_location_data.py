@@ -9,67 +9,51 @@ from decimal import Decimal
 from django.db.models import Q
 from django.core.management.base import BaseCommand, CommandError
 
-from whereToPark.models import NoParkingByLaw, RestrictedParkingByLaw
+from whereToPark.models import ByLaw, Intersection, Highway
 
 GEOCODER_API_ENDPOINT = "https://geocoder.ca/"
 URL_PARAMS = "&city=toronto&geoit=xml"
 
 
 class Command(BaseCommand):
-    # represents list of np/rp bylaw objs with updated boundaries
-    np_with_locations = []
-    rp_with_locations = []
+    intersections_to_update = []
     timeout_count = 0
 
     def handle(self, *args, **options):
-        self.np_with_locations = self.fetch_bylaws_with_loc(False)
-        self.rp_with_locations = self.fetch_bylaws_with_loc(True)
-        update_fields = [
-            "boundary_a_lat",
-            "boundary_a_lng",
-            "boundary_b_lat",
-            "boundary_b_lng",
-            "boundary_status_a",
-            "boundary_status_b",
-        ]
-        NoParkingByLaw.objects.bulk_update(self.np_with_locations, update_fields)
-        RestrictedParkingByLaw.objects.bulk_update(
-            self.rp_with_locations, update_fields
-        )
-        print(self.np_with_locations)
-        print(self.rp_with_locations)
+        self.import_intersections()
+        self.set_intersections_with_loc()
+        update_fields = ["status", "lat", "lng"]
+        Intersection.objects.bulk_update(self.intersections_to_update, update_fields)
 
-    def fetch_bylaws_with_loc(self, restricted):
-        laws = []
-        model = RestrictedParkingByLaw if restricted else NoParkingByLaw
-        exclude_q = (
-            Q(cross_street_a=None)
-            | Q(cross_street_b=None)
-            | Q(boundary_status_a__in=["FS", "FNF"])
-            | Q(boundary_status_b__in=["FS", "FNF"])
-        )
-        for bylaw in model.objects.exclude(exclude_q)[:5]:
+    def set_intersections_with_loc(self):
+        """
+        Intersections to update are fetched and ordered by bylaws. This is because
+        we want to update both boundaries for a bylaw rather than have one boundary set
+        for a bylaw. ie. a bylaw with only the boundary_start or boundary_end field
+        set isn't helpful to us.
+        """
+        for bylaw in ByLaw.objects.get_bylaws_to_update()[:30]:
             self.set_boundaries(bylaw)
-            laws.append(bylaw)
             if self.timeout_count >= 5:
                 break
-        return laws
 
     def set_boundaries(self, law):
-        (lat_a, lng_a), status_a = self.fetch_geocode(law.highway, law.cross_street_a)
-        (lat_b, lng_b), status_b = self.fetch_geocode(law.highway, law.cross_street_b)
-        if lat_a and lng_a and lat_b and lng_b:
-            law.boundary_a_lat = lat_a
-            law.boundary_a_lng = lng_a
-            law.boundary_b_lat = lat_b
-            law.boundary_b_lng = lng_b
-        law.boundary_status_a = status_a
-        law.boundary_status_b = status_b
+        for intersection in [law.boundary_start, law.boundary_end]:
+            (lat, lng), status = self.fetch_geocode(intersection)
+            if lat and lng:
+                intersection.lat = lat
+                intersection.lng = lng
+                intersection.status = status
+                self.intersections_to_update.append(intersection)
 
-    def fetch_geocode(self, highway, cross_street):
+    def fetch_geocode(self, intersection):
         """Handles calling the geocoder API endpoint to fetch lat/lng data
         for the highway (road) and cross street given. Currently uses the free tier which
         is heavily throttled"""
+        highway = intersection.main_street.name
+        cross_street = intersection.cross_street.name
+        if not highway or not cross_street:
+            return (None, None), "FNF"
         print(f"fetching {highway} at {cross_street}")
         url = f"{GEOCODER_API_ENDPOINT}?street1={highway}&street2={cross_street}{URL_PARAMS}"
         try:
@@ -111,3 +95,31 @@ class Command(BaseCommand):
             print("Geocode for intersection not found")
             return (None, None), "FNF"
         return (lat, lng), "FS"
+
+    def parse_between_field(self, between):
+        if not between:
+            return None, None
+        cross_streets = between.split(" and ")
+        if len(cross_streets) != 2:
+            return None, None
+        cross_highway_a = Highway.objects.filter(name=cross_streets[0]).first()
+        cross_highway_b = Highway.objects.filter(name=cross_streets[1]).first()
+        return cross_highway_a, cross_highway_b
+
+    def import_intersections(self):
+        bylaws_to_update = []
+        for bylaw in ByLaw.objects.all():
+            cross_highway_a, cross_highway_b = self.parse_between_field(bylaw.between)
+            if not cross_highway_a or not cross_highway_b:
+                continue
+            main_highway = bylaw.highway
+            intersection_start, _ = Intersection.objects.get_or_create(
+                main_street=main_highway, cross_street=cross_highway_a
+            )
+            intersection_end, _ = Intersection.objects.get_or_create(
+                main_street=main_highway, cross_street=cross_highway_b
+            )
+            bylaw.boundary_start = intersection_start
+            bylaw.boundary_end = intersection_end
+            bylaws_to_update.append(bylaw)
+        ByLaw.objects.bulk_update(bylaws_to_update, ["boundary_start", "boundary_end"])
