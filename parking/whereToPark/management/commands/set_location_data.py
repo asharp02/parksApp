@@ -16,61 +16,44 @@ URL_PARAMS = "&city=toronto&geoit=xml"
 
 
 class Command(BaseCommand):
-    # represents list of np/rp bylaw objs with updated boundaries
-    np_with_locations = []
-    rp_with_locations = []
+    intersections_to_update = []
     timeout_count = 0
 
     def handle(self, *args, **options):
         self.import_intersections()
-        # self.np_with_locations = self.fetch_bylaws_with_loc(False)
-        # self.rp_with_locations = self.fetch_bylaws_with_loc(True)
-        # update_fields = [
-        #     "boundary_a_lat",
-        #     "boundary_a_lng",
-        #     "boundary_b_lat",
-        #     "boundary_b_lng",
-        #     "boundary_status_a",
-        #     "boundary_status_b",
-        # ]
-        # NoParkingByLaw.objects.bulk_update(self.np_with_locations, update_fields)
-        # RestrictedParkingByLaw.objects.bulk_update(
-        #     self.rp_with_locations, update_fields
-        # )
-        # print(self.np_with_locations)
-        # print(self.rp_with_locations)
+        self.set_intersections_with_loc()
+        update_fields = ["status", "lat", "lng"]
+        Intersection.objects.bulk_update(self.intersections_to_update, update_fields)
 
-    def fetch_bylaws_with_loc(self, restricted):
-        laws = []
-        model = RestrictedParkingByLaw if restricted else NoParkingByLaw
+    def set_intersections_with_loc(self):
         exclude_q = (
-            Q(cross_street_a=None)
-            | Q(cross_street_b=None)
-            | Q(boundary_status_a__in=["FS", "FNF"])
-            | Q(boundary_status_b__in=["FS", "FNF"])
+            Q(boundary_start__status__in=["FS", "FNF"])
+            | Q(boundary_end__status__in=["FS", "FNF"])
+            | Q(boundary_start=None)
+            | Q(boundary_end=None)
         )
-        for bylaw in model.objects.exclude(exclude_q)[:5]:
+        for bylaw in ByLaw.objects.exclude(exclude_q)[:5]:
             self.set_boundaries(bylaw)
-            laws.append(bylaw)
             if self.timeout_count >= 5:
                 break
-        return laws
 
     def set_boundaries(self, law):
-        (lat_a, lng_a), status_a = self.fetch_geocode(law.highway, law.cross_street_a)
-        (lat_b, lng_b), status_b = self.fetch_geocode(law.highway, law.cross_street_b)
-        if lat_a and lng_a and lat_b and lng_b:
-            law.boundary_a_lat = lat_a
-            law.boundary_a_lng = lng_a
-            law.boundary_b_lat = lat_b
-            law.boundary_b_lng = lng_b
-        law.boundary_status_a = status_a
-        law.boundary_status_b = status_b
+        for intersection in [law.boundary_start, law.boundary_end]:
+            (lat, lng), status = self.fetch_geocode(intersection)
+            if lat and lng:
+                intersection.lat = lat
+                intersection.lng = lng
+                intersection.status = status
+                self.intersections_to_update.append(intersection)
 
-    def fetch_geocode(self, highway, cross_street):
+    def fetch_geocode(self, intersection):
         """Handles calling the geocoder API endpoint to fetch lat/lng data
         for the highway (road) and cross street given. Currently uses the free tier which
         is heavily throttled"""
+        highway = intersection.main_street.name
+        cross_street = intersection.cross_street.name
+        if not highway or not cross_street:
+            return (None, None), "FNF"
         print(f"fetching {highway} at {cross_street}")
         url = f"{GEOCODER_API_ENDPOINT}?street1={highway}&street2={cross_street}{URL_PARAMS}"
         try:

@@ -91,23 +91,15 @@ class SetLocationDataTests(TestCase):
         ).first()
         self.assertEqual(bylaw.boundary_end, intersection)
 
-    @skip("Refactoring")
     def test_simple_between_field_produces_correct_lat_lng(self):
         law = ByLaw.objects.get(id=1)
         self.assertAlmostEqual(law.boundary_start.lat, 43.689936, delta=0.00005)
         self.assertAlmostEqual(law.boundary_start.lng, -79.442908, delta=0.0005)
         self.assertAlmostEqual(law.boundary_end.lat, 43.690593, delta=0.00005)
         self.assertAlmostEqual(law.boundary_end.lng, -79.440109, delta=0.0005)
+        self.assertEqual(law.boundary_start.status, "FS")
+        self.assertEqual(law.boundary_end.status, "FS")
 
-    @skip("Refactoring")
-    def test_simple_between_field_produces_correct_lat_lng_restricted(self):
-        law = ByLaw.objects.get(id=1)
-        self.assertAlmostEqual(law.boundary_start.lat, 43.689936, delta=0.00005)
-        self.assertAlmostEqual(law.boundary_start.lng, -79.442908, delta=0.0005)
-        self.assertAlmostEqual(law.boundary_end.lat, 43.690593, delta=0.00005)
-        self.assertAlmostEqual(law.boundary_end.lng, -79.440109, delta=0.0005)
-
-    @skip("Refactoring")
     def test_complex_between_field_doesnt_save_location(self):
         ByLaw.objects.create(
             source_id="2",
@@ -115,15 +107,14 @@ class SetLocationDataTests(TestCase):
             schedule_name="Parking for Restricted Periods",
             highway=self.highway,
             side="North",
-            between="Brock Avenue and the west end of Abbs Street",
-            prohibited_times_and_or_days="12 hours",
+            between="brock avenue and the west end of abbs street",
+            times_and_or_days="12 hours",
         )
         call_command("set_location_data")
         law = ByLaw.objects.get(id=2)
         self.assertIsNone(law.boundary_start)
         self.assertIsNone(law.boundary_end)
 
-    @skip("Refactoring")
     def test_parse_geocode_xml(self):
         sample_xml = "<geodata>\
                         <latt>43.690601</latt>\
