@@ -9,7 +9,7 @@ from decimal import Decimal
 from django.db.models import Q
 from django.core.management.base import BaseCommand, CommandError
 
-from whereToPark.models import ByLaw
+from whereToPark.models import ByLaw, Intersection, Highway
 
 GEOCODER_API_ENDPOINT = "https://geocoder.ca/"
 URL_PARAMS = "&city=toronto&geoit=xml"
@@ -22,22 +22,23 @@ class Command(BaseCommand):
     timeout_count = 0
 
     def handle(self, *args, **options):
-        self.np_with_locations = self.fetch_bylaws_with_loc(False)
-        self.rp_with_locations = self.fetch_bylaws_with_loc(True)
-        update_fields = [
-            "boundary_a_lat",
-            "boundary_a_lng",
-            "boundary_b_lat",
-            "boundary_b_lng",
-            "boundary_status_a",
-            "boundary_status_b",
-        ]
-        NoParkingByLaw.objects.bulk_update(self.np_with_locations, update_fields)
-        RestrictedParkingByLaw.objects.bulk_update(
-            self.rp_with_locations, update_fields
-        )
-        print(self.np_with_locations)
-        print(self.rp_with_locations)
+        self.import_intersections()
+        # self.np_with_locations = self.fetch_bylaws_with_loc(False)
+        # self.rp_with_locations = self.fetch_bylaws_with_loc(True)
+        # update_fields = [
+        #     "boundary_a_lat",
+        #     "boundary_a_lng",
+        #     "boundary_b_lat",
+        #     "boundary_b_lng",
+        #     "boundary_status_a",
+        #     "boundary_status_b",
+        # ]
+        # NoParkingByLaw.objects.bulk_update(self.np_with_locations, update_fields)
+        # RestrictedParkingByLaw.objects.bulk_update(
+        #     self.rp_with_locations, update_fields
+        # )
+        # print(self.np_with_locations)
+        # print(self.rp_with_locations)
 
     def fetch_bylaws_with_loc(self, restricted):
         laws = []
@@ -112,42 +113,30 @@ class Command(BaseCommand):
             return (None, None), "FNF"
         return (lat, lng), "FS"
 
-    def parse_between_field(self, attributes):
-        res = []
-        if "between" not in attributes or attributes["between"] == None:
-            return res
-        cross_streets = attributes["between"].split(" and ")
+    def parse_between_field(self, between):
+        if not between:
+            return None, None
+        cross_streets = between.split(" and ")
         if len(cross_streets) != 2:
-            return res
-        cross_street_a = cross_streets[0].lower()
-        cross_street_b = cross_streets[1].lower()
-        found_a = Highway.objects.filter(name=cross_street_a).count() > 0
-        found_b = Highway.objects.filter(name=cross_street_b).count() > 0
-        if found_a and found_b:
-            res.append((attributes["highway"], cross_street_a))
-            res.append((attributes["highway"], cross_street_b))
-        return res
+            return None, None
+        cross_highway_a = Highway.objects.filter(name=cross_streets[0]).first()
+        cross_highway_b = Highway.objects.filter(name=cross_streets[1]).first()
+        return cross_highway_a, cross_highway_b
 
     def import_intersections(self):
-        objs = []
-        for bylaw in self.no_parking_bylaws + self.restricted_bylaws:
-            intersections = self.parse_between_field(bylaw)
-            bylaw["highway"] = None
-            bylaw["boundary_start"] = None
-            for i, (main, cross) in enumerate(intersections):
-                if not main or not cross:
-                    continue
-                highway_main = Highway.objects.filter(name=main).first()
-                highway_cross = Highway.objects.filter(name=cross).first()
-                intersection_obj, _ = Intersection.objects.get_or_create(
-                    main_street=highway_main, cross_street=highway_cross
-                )
-                intersection_obj.save()
-                bylaw["highway"] = highway_main
-                if i == 0:
-                    bylaw["boundary_start"] = intersection_obj
-                else:
-                    bylaw["boundary_end"] = intersection_obj
-                objs.append(intersection_obj)
-
-        Intersection.objects.bulk_create(objs, ignore_conflicts=True)
+        bylaws_to_update = []
+        for bylaw in ByLaw.objects.all():
+            cross_highway_a, cross_highway_b = self.parse_between_field(bylaw.between)
+            if not cross_highway_a or not cross_highway_b:
+                continue
+            main_highway = bylaw.highway
+            intersection_start, _ = Intersection.objects.get_or_create(
+                main_street=main_highway, cross_street=cross_highway_a
+            )
+            intersection_end, _ = Intersection.objects.get_or_create(
+                main_street=main_highway, cross_street=cross_highway_b
+            )
+            bylaw.boundary_start = intersection_start
+            bylaw.boundary_end = intersection_end
+            bylaws_to_update.append(bylaw)
+        ByLaw.objects.bulk_update(bylaws_to_update, ["boundary_start", "boundary_end"])
