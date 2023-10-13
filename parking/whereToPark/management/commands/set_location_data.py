@@ -26,13 +26,13 @@ class Command(BaseCommand):
         Intersection.objects.bulk_update(self.intersections_to_update, update_fields)
 
     def set_intersections_with_loc(self):
-        exclude_q = (
-            Q(boundary_start__status__in=["FS", "FNF"])
-            | Q(boundary_end__status__in=["FS", "FNF"])
-            | Q(boundary_start=None)
-            | Q(boundary_end=None)
-        )
-        for bylaw in ByLaw.objects.exclude(exclude_q)[:5]:
+        """
+        Intersections to update are fetched and ordered by bylaws. This is because
+        we want to update both boundaries for a bylaw rather than have one boundary set
+        for a bylaw. ie. a bylaw with only the boundary_start or boundary_end field
+        set isn't helpful to us.
+        """
+        for bylaw in ByLaw.objects.get_bylaws_to_update()[:30]:
             self.set_boundaries(bylaw)
             if self.timeout_count >= 5:
                 break
