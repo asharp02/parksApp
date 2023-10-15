@@ -59,13 +59,16 @@ class ByLawManager(models.Manager):
         We only need to update bylaws with boundaries that have not been attempted yet (ie status
         is 'NA' or 'TO')
         """
-        exclude_qs = (
-            Q(boundary_start=None)
-            | Q(boundary_end=None)
-            | Q(boundary_start__status__in=["FS", "FNF"])
-            | Q(boundary_end__status__in=["FS", "FNF"])
+        exclude_qs = Q(boundary_start=None) | Q(boundary_end=None)
+
+        filter_qs = Q(boundary_start__status__in=["NA", "TO"]) | Q(
+            boundary_end__status__in=["NA", "TO"]
         )
-        return self.exclude(exclude_qs).select_related(*self.related_objs)
+        return (
+            self.exclude(exclude_qs)
+            .filter(filter_qs)
+            .select_related(*self.related_objs)
+        )
 
 
 class ByLaw(models.Model):

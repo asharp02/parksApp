@@ -16,14 +16,16 @@ URL_PARAMS = "&city=toronto&geoit=xml"
 
 
 class Command(BaseCommand):
-    intersections_to_update = []
+    intersections_to_update = {}
     timeout_count = 0
 
     def handle(self, *args, **options):
         self.import_intersections()
         self.set_intersections_with_loc()
         update_fields = ["status", "lat", "lng"]
-        Intersection.objects.bulk_update(self.intersections_to_update, update_fields)
+        Intersection.objects.bulk_update(
+            list(self.intersections_to_update.values()), update_fields
+        )
 
     def set_intersections_with_loc(self):
         """
@@ -32,19 +34,23 @@ class Command(BaseCommand):
         for a bylaw. ie. a bylaw with only the boundary_start or boundary_end field
         set isn't helpful to us.
         """
-        for bylaw in ByLaw.objects.get_bylaws_to_update()[:30]:
+        for bylaw in ByLaw.objects.get_bylaws_to_update()[:90]:
             self.set_boundaries(bylaw)
             if self.timeout_count >= 5:
                 break
 
     def set_boundaries(self, law):
         for intersection in [law.boundary_start, law.boundary_end]:
+            if (
+                intersection.status in ["FNF", "FS"]
+                or intersection.id in self.intersections_to_update
+            ):
+                continue
             (lat, lng), status = self.fetch_geocode(intersection)
-            if lat and lng:
-                intersection.lat = lat
-                intersection.lng = lng
-                intersection.status = status
-                self.intersections_to_update.append(intersection)
+            intersection.lat = lat
+            intersection.lng = lng
+            intersection.status = status
+            self.intersections_to_update[intersection.id] = intersection
 
     def fetch_geocode(self, intersection):
         """Handles calling the geocoder API endpoint to fetch lat/lng data
