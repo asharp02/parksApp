@@ -8,11 +8,11 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 </head>
-<body>
-    <div style="width: 1000px;height:1000px" id='map'></div>
-    {% for bylaw in np_bylaws %}
+<body style="overflow: hidden">
+    <div style="width: 100vw;height:100vh;position: static;" id='map'></div>
+    <!-- {% for bylaw in np_bylaws %}
         <div> {{ bylaw.boundary_start.lat }}</div></br>
-    {% endfor %}
+    {% endfor %} -->
     <script>
 
         let currentEventMarkers = [];
