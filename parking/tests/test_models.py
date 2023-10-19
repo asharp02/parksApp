@@ -97,6 +97,13 @@ class ByLawModelTest(TestCase):
         field_label = law._meta.get_field("max_period_permitted").verbose_name
         self.assertEqual(field_label, "max period permitted")
 
+    def test_midpoint(self):
+        law = ByLaw.objects.get(id=1)
+        midpoint_a = (self.intersection_1.lat + self.intersection_2.lat) / 2
+        midpoint_b = (self.intersection_1.lng + self.intersection_2.lng) / 2
+        self.assertEqual(law.midpoint[0], midpoint_a)
+        self.assertEqual(law.midpoint[1], midpoint_b)
+
 
 class HighwayModelTest(TestCase):
     @classmethod

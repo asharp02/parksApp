@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Q
+from django.utils.functional import cached_property
 
 
 STREET_SIDES = (("W", "West"), ("E", "East"), ("N", "North"), ("S", "South"))
@@ -101,6 +102,20 @@ class ByLaw(models.Model):
 
     def __str__(self):
         return f"{self.highway} ({self.side}) - {self.source_id}"
+
+    @cached_property
+    def midpoint(self):
+        if not self.boundary_start or not self.boundary_end:
+            return (None, None)
+        lat_mid = (self.boundary_start.lat + self.boundary_end.lat) / 2
+        lng_mid = (self.boundary_start.lng + self.boundary_end.lng) / 2
+        return (lat_mid, lng_mid)
+
+    @cached_property
+    def popup_html(self):
+        html = f"<h1>ByLaw</h1><br/><h3>{self.highway} at {self.between}</h3>"
+        print(html)
+        return html
 
     class Meta:
         unique_together = ["schedule", "source_id"]
