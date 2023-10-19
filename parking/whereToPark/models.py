@@ -111,12 +111,6 @@ class ByLaw(models.Model):
         lng_mid = (self.boundary_start.lng + self.boundary_end.lng) / 2
         return (lat_mid, lng_mid)
 
-    @cached_property
-    def popup_html(self):
-        html = f"<h1>ByLaw</h1><br/><h3>{self.highway} at {self.between}</h3>"
-        print(html)
-        return html
-
     class Meta:
         unique_together = ["schedule", "source_id"]
 

@@ -10,9 +10,6 @@
 </head>
 <body style="overflow: hidden">
     <div style="width: 100vw;height:100vh;position: static;" id='map'></div>
-    <!-- {% for bylaw in np_bylaws %}
-        <div> {{ bylaw.boundary_start.lat }}</div></br>
-    {% endfor %} -->
     <script>
 
         let currentEventMarkers = [];
@@ -34,10 +31,7 @@
         let coord_b;
         let coord_mid;
         let marker_mid;
-        let popup;
         {% for bylaw in rp_bylaws %}
-            // popup = new mapboxgl.Popup({ closeOnClick: false })
-            //     .setHTML({{ bylaw.popup_html }})
             coord_a = [{{ bylaw.boundary_start.lng }}, {{ bylaw.boundary_start.lat }} ]
             coord_b = [{{ bylaw.boundary_end.lng }}, {{ bylaw.boundary_end.lat }} ]
             coord_mid = [{{ bylaw.midpoint.1 }}, {{ bylaw.midpoint.0 }} ]
@@ -48,13 +42,10 @@
                 .setLngLat(coord_b)
                 .addTo(map);
             marker_mid = new mapboxgl.Marker({ color: "#FFA500" })
-                .setPopup(popup)
                 .setLngLat(coord_mid)
                 .addTo(map);
         {% endfor %}
         {% for bylaw in np_bylaws %}
-            // popup = new mapboxgl.Popup({ closeOnClick: false })
-            //     .setHTML({{ bylaw.popup_html }})
             coord_a = [{{ bylaw.boundary_start.lng }}, {{ bylaw.boundary_start.lat }} ]
             coord_b = [{{ bylaw.boundary_end.lng }}, {{ bylaw.boundary_end.lat }} ]
             coord_mid = [{{ bylaw.midpoint.1 }}, {{ bylaw.midpoint.0 }} ]
@@ -65,7 +56,6 @@
                 .setLngLat(coord_b)
                 .addTo(map);
             marker_mid = new mapboxgl.Marker({ color: "#FFA500" })
-                .setPopup(popup)
                 .setLngLat(coord_mid)
                 .addTo(map);
         {% endfor %}
