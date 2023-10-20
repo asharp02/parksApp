@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import BylawToggle from './BylawToggle.jsx';
 import mapboxgl from 'mapbox-gl'; // eslint-disable-line import/no-webpack-loader-syntax
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_API_KEY;
@@ -22,6 +23,7 @@ function App() {
 
     return (
         <div>
+            <BylawToggle></BylawToggle>
             <div ref={mapContainer} className="map-container" />
         </div>
     );
