@@ -4,3 +4,5 @@ venv/
 db.sqlite3
 fixtures/
 parking_schedules.zip
+.env
+/node_modules
