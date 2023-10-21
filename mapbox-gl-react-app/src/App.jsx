@@ -13,6 +13,9 @@ function App() {
     const [zoom, setZoom] = useState(12.5);
     const [npBylaws, setNpBylaws] = useState([]);
     const [rpBylaws, setRpBylaws] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [npBylawMarkers, setNpBylawMarkers] = useState([]);
+    const [rpBylawMarkers, setRpBylawMarkers] = useState([]);
 
     useEffect(() => {
         if (map.current) return;
@@ -26,27 +29,47 @@ function App() {
         const fetchNpData = async () => {
             try {
                 const response = await axios.get("/api/npbylaws");
-                setNpBylaws(response.data);
+                const result = await response.data;
+                setNpBylaws(result);
+                setLoading(false);
             } catch (error) {
                 console.error("Error fetching no parking bylaws", error);
+                setLoading(false);
             }
         };
 
         const fetchRpData = async () => {
             try {
                 const response = await axios.get("/api/rpbylaws");
-                setRpBylaws(response.data);
+                const result = await response.data;
+                setRpBylaws(result);
+                setLoading(false);
             } catch (error) {
                 console.log("Error fetching restricted parking bylaws", error);
+                setLoading(false);
             }
         };
-
         fetchNpData();
         fetchRpData();
-    });
-    console.log(npBylaws);
-    console.log(rpBylaws);
+    }, []);
 
+    useEffect(() => {
+        if(!loading && npBylaws && rpBylaws){
+            setNpBylawMarkers(addMarkers(npBylaws));
+            setRpBylawMarkers(addMarkers(rpBylaws));
+        }
+    }, [loading, npBylaws, rpBylaws])
+    const addMarkers = (bylaws) => {
+        const markers = bylaws.results.map((bylaw) => {
+            const color = bylaw.schedule === "13" ? "#ff0000" : "#50C878";
+            let marker_a = new mapboxgl.Marker({color: color})
+                .setLngLat([bylaw.midpoint[1], bylaw.midpoint[0]])
+                .addTo(map.current);
+            return marker_a
+        })
+        console.log(markers)
+        return markers
+    }
 
     return (
         <div>
