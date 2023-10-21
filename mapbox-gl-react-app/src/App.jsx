@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import BylawToggle from './BylawToggle.jsx';
 import mapboxgl from 'mapbox-gl'; // eslint-disable-line import/no-webpack-loader-syntax
-
+import axios from "axios";
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_API_KEY;
 
 
@@ -11,6 +11,9 @@ function App() {
     const [lng, setLng] = useState(-79.3832);
     const [lat, setLat] = useState(43.6532);
     const [zoom, setZoom] = useState(12.5);
+    const [npBylaws, setNpBylaws] = useState([]);
+    const [rpBylaws, setRpBylaws] = useState([]);
+
     useEffect(() => {
         if (map.current) return;
         map.current = new mapboxgl.Map({
@@ -19,7 +22,31 @@ function App() {
             center: [lng, lat],
             zoom: zoom
         });
+
+        const fetchNpData = async () => {
+            try {
+                const response = await axios.get("/api/npbylaws");
+                setNpBylaws(response.data);
+            } catch (error) {
+                console.error("Error fetching no parking bylaws", error);
+            }
+        };
+
+        const fetchRpData = async () => {
+            try {
+                const response = await axios.get("/api/rpbylaws");
+                setRpBylaws(response.data);
+            } catch (error) {
+                console.log("Error fetching restricted parking bylaws", error);
+            }
+        };
+
+        fetchNpData();
+        fetchRpData();
     });
+    console.log(npBylaws);
+    console.log(rpBylaws);
+
 
     return (
         <div>

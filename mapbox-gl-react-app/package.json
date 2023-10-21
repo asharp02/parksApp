@@ -1,6 +1,7 @@
 {
   "name": "vite-react-app",
   "private": true,
+  "proxy": "http://localhost:8000",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -10,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "axios": "^1.5.1",
     "dotenv": "^16.3.1",
     "mapbox-gl": "^2.14.1",
     "react": "^18.2.0",
