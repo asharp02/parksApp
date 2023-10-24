@@ -55,66 +55,47 @@ function App() {
 
     useEffect(() => {
         if(!loading && npBylaws && rpBylaws){
-            setNpBylawMarkers(addMarkers(npBylaws));
-            setRpBylawMarkers(addMarkers(rpBylaws));
+            setNpBylawMarkers(createMarkers(npBylaws, true));
+            setRpBylawMarkers(createMarkers(rpBylaws, false));
         }
     }, [loading, npBylaws, rpBylaws])
-    const addMarkers = (bylaws) => {
+    const createMarkers = (bylaws, isNpBylaws) => {
         const markers = bylaws.results.map((bylaw) => {
-            const color = bylaw.schedule === "13" ? "#ff0000" : "#50C878";
+            const color = isNpBylaws ? "#ff0000" : "#50C878";
             let marker_a = new mapboxgl.Marker({color: color})
                 .setLngLat([bylaw.midpoint[1], bylaw.midpoint[0]])
-                .addTo(map.current);
+                .addTo(map.current)
             return marker_a
         })
         console.log(markers)
         return markers
     }
+    const addMarkers = (bylawMarkers) => {
+        bylawMarkers.forEach((marker) => {
+            marker.addTo(map.current);
+        })
+    }
+    const removeMarkers = (bylawMarkers) => {
+        bylawMarkers.forEach((marker) => {
+            marker.remove();
+        })
+    }
+
+    const toggleMarkers = (isNPMarkers, isChecked) => {
+        let markers = isNPMarkers ? npBylawMarkers : rpBylawMarkers;
+        if (isChecked) {
+            removeMarkers(markers);
+        } else {
+            addMarkers(markers);
+        }
+    }
 
     return (
         <div>
-            <BylawToggle></BylawToggle>
+            <BylawToggle toggleHandler={toggleMarkers}></BylawToggle>
             <div ref={mapContainer} className="map-container" />
         </div>
     );
 }
 
 export default App;
-
-
-
-// import { useState } from 'react'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-// import './App.css'
-
-// function App() {
-//   const [count, setCount] = useState(0)
-
-//   return (
-//     <>
-//       <div>
-//         <a href="https://vitejs.dev" target="_blank">
-//           <img src={viteLogo} className="logo" alt="Vite logo" />
-//         </a>
-//         <a href="https://react.dev" target="_blank">
-//           <img src={reactLogo} className="logo react" alt="React logo" />
-//         </a>
-//       </div>
-//       <h1>Vite + React</h1>
-//       <div className="card">
-//         <button onClick={() => setCount((count) => count + 1)}>
-//           count is {count}
-//         </button>
-//         <p>
-//           Edit <code>src/App.jsx</code> and save to test HMR
-//         </p>
-//       </div>
-//       <p className="read-the-docs">
-//         Click on the Vite and React logos to learn more
-//       </p>
-//     </>
-//   )
-// }
-
-// export default App
