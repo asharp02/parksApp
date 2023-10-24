@@ -61,14 +61,61 @@ function App() {
     }, [loading, npBylaws, rpBylaws])
     const createMarkers = (bylaws, isNpBylaws) => {
         const markers = bylaws.results.map((bylaw) => {
+            let popup = createPopup(bylaw);
             const color = isNpBylaws ? "#ff0000" : "#50C878";
             let marker_a = new mapboxgl.Marker({color: color})
                 .setLngLat([bylaw.midpoint[1], bylaw.midpoint[0]])
+                .setPopup(popup)
                 .addTo(map.current)
             return marker_a
         })
         console.log(markers)
         return markers
+    }
+
+    const formatBylawName = (bylaw) => {
+        if (bylaw.schedule === "13"){
+            return "No Parking";
+        }
+        return "Valid Parking";
+    }
+
+    const capitalize = (sentence) => {
+        const words = sentence.split(" ");
+        const capitalizedWords = words.map((word) => {
+            let firstLetter = word[0];
+            if (!word.startsWith("a.m.") && !word.startsWith("p.m.")){
+                firstLetter = word[0].toUpperCase();
+            }
+            return firstLetter + word.substring(1);
+        });
+        return capitalizedWords.join(" ");
+    }
+
+    const formatBylawStreetDetail = (bylaw) => {
+        const streetDetailText = `${capitalize(bylaw.highway.name)}, \
+                                    ${bylaw.side} side, \
+                                    from ${capitalize(bylaw.boundary_start.cross_street.name)} \
+                                    to ${capitalize(bylaw.boundary_end.cross_street.name)}`;
+        return streetDetailText;
+    }
+
+    const getPopupHTML = (bylaw) => {
+       let popup = `<div class="popup">
+                        <h2 class="popup-title">${formatBylawName(bylaw)}</h2>
+                        <p class="street-detail">${formatBylawStreetDetail(bylaw)}</p>
+                        <p class="time-range">${capitalize(bylaw.times_and_or_days)}</p>`
+
+        if (bylaw.schedule === "15") {
+            popup += `<p class="max-time-permitted"><strong>Max Time Permitted: </strong>\
+                        ${bylaw.max_period_permitted}</p>`
+        }
+        popup += `</div>`;
+        return popup;
+    }
+    const createPopup = (bylaw) => {
+        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(getPopupHTML(bylaw));
+        return popup
     }
     const addMarkers = (bylawMarkers) => {
         bylawMarkers.forEach((marker) => {

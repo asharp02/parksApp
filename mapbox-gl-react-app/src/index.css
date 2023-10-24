@@ -92,3 +92,15 @@ button:focus-visible {
 .toggleSidebar input {
   margin-right: 10px;
 }
+
+.popup {
+  text-align: center;
+}
+
+.popup-title {
+  margin: 0 0 5px 0;
+}
+
+.street-detail {
+  margin: 0;
+}
