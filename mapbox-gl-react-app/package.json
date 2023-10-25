@@ -1,7 +1,7 @@
 {
   "name": "vite-react-app",
   "private": true,
-  "proxy": "http://localhost:8000",
+  "proxy": "parking.adriansh.com",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
