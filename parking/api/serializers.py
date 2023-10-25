@@ -21,6 +21,7 @@ class ByLawSerializer(serializers.ModelSerializer):
     boundary_start = IntersectionSerializer(read_only=True)
     boundary_end = IntersectionSerializer(read_only=True)
     midpoint = serializers.ReadOnlyField()
+    highway = HighwaySerializer(read_only=True)
 
     class Meta:
         model = ByLaw
