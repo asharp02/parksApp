@@ -54,11 +54,12 @@ function App() {
     }, []);
 
     useEffect(() => {
-        if(!loading && npBylaws && rpBylaws){
+        if(!loading && npBylaws && rpBylaws && npBylaws.results && rpBylaws.results){
             setNpBylawMarkers(createMarkers(npBylaws, true));
             setRpBylawMarkers(createMarkers(rpBylaws, false));
         }
     }, [loading, npBylaws, rpBylaws])
+
     const createMarkers = (bylaws, isNpBylaws) => {
         const markers = bylaws.results.map((bylaw) => {
             let popup = createPopup(bylaw);
@@ -81,6 +82,9 @@ function App() {
     }
 
     const capitalize = (sentence) => {
+        if (sentence === null){
+            return ""
+        }
         const words = sentence.split(" ");
         const capitalizedWords = words.map((word) => {
             let firstLetter = word[0];
