@@ -1,4 +1,14 @@
 {
     "buildCommand": "npm run build",
-    "framework": "vite"
+    "framework": "vite",
+    "redirects": [
+        {
+            "source": "/api/npbylaws",
+            "destination": "https://parking.adriansh.com/api/npbylaws"
+        },
+        {
+            "source": "/api/rpbylaws",
+            "destination": "https://parking.adriansh.com/api/rpbylaws"
+        }
+    ]
 }
