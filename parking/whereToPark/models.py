@@ -41,16 +41,18 @@ class ByLawManager(models.Manager):
     ]
 
     def get_np_bylaws_to_display(self):
+        filter_qs = Q(boundary_start__status="FS") | Q(boundary_end__status="FS")
         return (
             self.filter(schedule="13")
-            .filter(boundary_start__status="FS", boundary_end__status="FS")
+            .filter(filter_qs)
             .select_related(*self.related_objs)
         )
 
     def get_rp_bylaws_to_display(self):
+        filter_qs = Q(boundary_start__status="FS") | Q(boundary_end__status="FS")
         return (
             self.filter(schedule="15")
-            .filter(boundary_start__status="FS", boundary_end__status="FS")
+            .filter(filter_qs)
             .select_related(*self.related_objs)
         )
 
@@ -105,10 +107,22 @@ class ByLaw(models.Model):
 
     @cached_property
     def midpoint(self):
-        if not self.boundary_start or not self.boundary_end:
+        lat_mid = None
+        lng_mid = None
+        if not self.boundary_start and not self.boundary_end:
             return (None, None)
-        lat_mid = (self.boundary_start.lat + self.boundary_end.lat) / 2
-        lng_mid = (self.boundary_start.lng + self.boundary_end.lng) / 2
+        # set midpoint as start or end coords if one boundary does not exist
+        if self.boundary_start.status == "FS" and not self.boundary_end.status == "FS":
+            lat_mid = self.boundary_start.lat
+            lng_mid = self.boundary_start.lng
+        elif (
+            self.boundary_end.status == "FS" and not self.boundary_start.status == "FS"
+        ):
+            lat_mid = self.boundary_end.lat
+            lng_mid = self.boundary_end.lng
+        else:
+            lat_mid = (self.boundary_start.lat + self.boundary_end.lat) / 2
+            lng_mid = (self.boundary_start.lng + self.boundary_end.lng) / 2
         return (lat_mid, lng_mid)
 
     class Meta:
