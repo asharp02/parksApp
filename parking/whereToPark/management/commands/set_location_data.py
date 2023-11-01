@@ -89,7 +89,7 @@ class Command(BaseCommand):
         confidence_score = 0
         for child in tree:
             if child.tag == "error":
-                return (None, None), "TO"
+                return (None, None), "FNF"
             if child.tag == "latt" and child.text:
                 lat = float(child.text)
             elif child.tag == "longt" and child.text:
@@ -106,10 +106,20 @@ class Command(BaseCommand):
         if not between:
             return None, None
         cross_streets = between.split(" and ")
-        if len(cross_streets) != 2:
+        if (
+            len(cross_streets) != 2
+            or "point" in cross_streets[0]
+            or "point" in cross_streets[1]
+        ):
             return None, None
-        cross_highway_a = Highway.objects.filter(name=cross_streets[0]).first()
-        cross_highway_b = Highway.objects.filter(name=cross_streets[1]).first()
+        first_street, second_street = cross_streets
+        if " of " in cross_streets[0]:
+            first_street = cross_streets[0].split("of")[1].strip()
+        if " of " in cross_streets[1]:
+            second_street = cross_streets[1].split("of")[1].strip()
+
+        cross_highway_a = Highway.objects.filter(name=first_street).first()
+        cross_highway_b = Highway.objects.filter(name=second_street).first()
         return cross_highway_a, cross_highway_b
 
     def import_intersections(self):
