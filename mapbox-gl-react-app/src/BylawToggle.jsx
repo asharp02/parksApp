@@ -24,7 +24,7 @@ function BylawToggle({ toggleHandler }) {
             />
             <Checkbox 
                 index="validParking"
-                label="Valid Parking" 
+                label="Free Parking" 
                 checkHandler={() => toggleBylawMarkers(false)}
                 checkedStatus={isRPChecked}
             />

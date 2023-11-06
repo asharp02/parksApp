@@ -78,7 +78,7 @@ function App() {
         if (bylaw.schedule === "13"){
             return "No Parking";
         }
-        return "Valid Parking";
+        return "Free Parking";
     }
 
     const capitalize = (sentence) => {
