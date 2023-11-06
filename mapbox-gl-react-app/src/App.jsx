@@ -85,7 +85,7 @@ function App() {
         if (sentence === null){
             return ""
         }
-        const words = sentence.split(" ");
+        const words = sentence.trim().split(" ");
         const capitalizedWords = words.map((word) => {
             let firstLetter = word[0];
             if (!word.startsWith("a.m.") && !word.startsWith("p.m.")){
