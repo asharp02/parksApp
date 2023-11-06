@@ -6,6 +6,7 @@ class HighwaySerializer(serializers.ModelSerializer):
     class Meta:
         model = Highway
         fields = ["name"]
+        read_only_fields = fields
 
 
 class IntersectionSerializer(serializers.ModelSerializer):
@@ -15,6 +16,7 @@ class IntersectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intersection
         fields = ["main_street", "cross_street", "lat", "lng"]
+        read_only_fields = fields
 
 
 class ByLawSerializer(serializers.ModelSerializer):
@@ -38,3 +40,4 @@ class ByLawSerializer(serializers.ModelSerializer):
             "max_period_permitted",
             "midpoint",
         ]
+        read_only_fields = fields
