@@ -106,11 +106,7 @@ class Command(BaseCommand):
         if not between:
             return None, None
         cross_streets = between.split(" and ")
-        if (
-            len(cross_streets) != 2
-            or "point" in cross_streets[0]
-            or "point" in cross_streets[1]
-        ):
+        if len(cross_streets) != 2:
             return None, None
         first_street, second_street = cross_streets
         if " of " in cross_streets[0]:

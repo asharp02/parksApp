@@ -25,7 +25,11 @@ SECRET_KEY = "django-insecure-8x0j-20*fezb2o-frlbta*19+nqhzxhe@tvc8_juk@si_$d5f8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["parking.adriansh.com", "www.parking.adriansh.com"]
+ALLOWED_HOSTS = [
+    "parking.adriansh.com",
+    "www.parking.adriansh.com",
+    "localhost",
+]
 
 
 # Application definition
@@ -129,7 +133,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
-    "PAGE_SIZE": 1000,
+    "PAGE_SIZE": 5000,
 }
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:5173",
