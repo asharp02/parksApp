@@ -99,7 +99,7 @@ function App() {
     }
 
     const formatBylawStreetDetail = (bylaw) => {
-        const streetDetailText = `${capitalize(bylaw.highway)}, \
+        const streetDetailText = `${capitalize(bylaw.highway.name)}, \
                                     ${bylaw.side} side, \
                                     between ${capitalize(bylaw.between)}`;
         return streetDetailText;

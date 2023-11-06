@@ -27,7 +27,6 @@ class ByLawSerializer(serializers.Serializer):
     source_id = serializers.IntegerField(read_only=True)
     schedule = serializers.CharField(read_only=True)
     schedule_name = serializers.CharField(read_only=True)
-    highway = serializers.CharField(read_only=True)
     side = serializers.CharField(read_only=True)
     between = serializers.CharField(read_only=True)
     times_and_or_days = serializers.CharField(read_only=True)

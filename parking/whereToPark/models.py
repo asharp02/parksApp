@@ -38,6 +38,7 @@ class ByLawManager(models.Manager):
         "boundary_start__cross_street",
         "boundary_end__main_street",
         "boundary_end__cross_street",
+        "highway",
     ]
 
     def get_np_bylaws_to_display(self):
