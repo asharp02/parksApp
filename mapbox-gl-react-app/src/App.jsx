@@ -30,7 +30,6 @@ function App() {
             try {
                 const response = await axios.get("/api/npbylaws");
                 const result = await response.data;
-                console.log(result)
                 setNpBylaws(result);
                 setLoading(false);
             } catch (error) {
@@ -62,7 +61,6 @@ function App() {
     }, [loading, npBylaws, rpBylaws])
 
     const createMarkers = (bylaws, isNpBylaws) => {
-        console.log(bylaws)
         const markers = bylaws.results.map((bylaw) => {
             let popup = createPopup(bylaw);
             const color = isNpBylaws ? "#ff0000" : "#50C878";
@@ -119,7 +117,6 @@ function App() {
         return popup;
     }
     const createPopup = (bylaw) => {
-        console.log(bylaw)
         const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(getPopupHTML(bylaw));
         return popup
     }
