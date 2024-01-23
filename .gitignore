@@ -6,3 +6,4 @@ fixtures/
 parking_schedules.zip
 .env
 /node_modules
+__pycache__

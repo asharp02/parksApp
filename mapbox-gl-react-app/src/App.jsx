@@ -10,7 +10,7 @@ function App() {
     const map = useRef(null);
     const [lng, setLng] = useState(-79.3832);
     const [lat, setLat] = useState(43.6532);
-    const [zoom, setZoom] = useState(12.5);
+    const [zoom, setZoom] = useState(13);
     const [npBylaws, setNpBylaws] = useState([]);
     const [rpBylaws, setRpBylaws] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,6 +24,12 @@ function App() {
             style: 'mapbox://styles/mapbox/streets-v12',
             center: [lng, lat],
             zoom: zoom
+        });
+
+        map.current.on("move", () => {
+            setLng(map.current.getCenter().lng.toFixed(4));
+            setLat(map.current.getCenter().lat.toFixed(4));
+            setZoom(map.current.getZoom().toFixed(2));
         });
 
         const fetchNpData = async () => {
