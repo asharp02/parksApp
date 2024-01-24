@@ -26,12 +26,6 @@ function App() {
             zoom: zoom
         });
 
-        map.current.on("move", () => {
-            setLng(map.current.getCenter().lng.toFixed(4));
-            setLat(map.current.getCenter().lat.toFixed(4));
-            setZoom(map.current.getZoom().toFixed(2));
-        });
-
         const fetchNpData = async () => {
             try {
                 const response = await axios.get("/api/npbylaws");
@@ -57,6 +51,13 @@ function App() {
         };
         fetchNpData();
         fetchRpData();
+        map.current.on("move", () => {
+            setLng(map.current.getCenter().lng.toFixed(4));
+            setLat(map.current.getCenter().lat.toFixed(4));
+            setZoom(map.current.getZoom().toFixed(2));
+            fetchNpData(); // only fetch data based on current lat/lng and radius
+            fetchRpData(); // only fetch data based on current lat/lng and radius
+        });
     }, []);
 
     useEffect(() => {
