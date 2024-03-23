@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import BylawToggle from './BylawToggle.jsx';
+import ZoomModal from './ZoomModal.jsx';
 import mapboxgl from 'mapbox-gl'; // eslint-disable-line import/no-webpack-loader-syntax
 import axios from "axios";
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_API_KEY;
@@ -10,7 +11,7 @@ function App() {
     const map = useRef(null);
     const [lng, setLng] = useState(-79.3832);
     const [lat, setLat] = useState(43.6532);
-    const [zoom, setZoom] = useState(13);
+    const [zoom, setZoom] = useState(14);
     const [npBylaws, setNpBylaws] = useState([]);
     const [rpBylaws, setRpBylaws] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -51,7 +52,8 @@ function App() {
         };
         fetchNpData();
         fetchRpData();
-        map.current.on("move", () => {
+
+        map.current.on("moveend", () => {
             setLng(map.current.getCenter().lng.toFixed(4));
             setLat(map.current.getCenter().lat.toFixed(4));
             setZoom(map.current.getZoom().toFixed(2));
@@ -150,6 +152,7 @@ function App() {
     return (
         <div>
             <BylawToggle toggleHandler={toggleMarkers}></BylawToggle>
+            <ZoomModal zoom={zoom}></ZoomModal>
             <div ref={mapContainer} className="map-container" />
         </div>
     );
