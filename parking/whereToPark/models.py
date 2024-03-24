@@ -41,6 +41,10 @@ class ByLawManager(models.Manager):
         "highway",
     ]
 
+    def get_bylaws_to_display(self):
+        filter_qs = Q(boundary_start__status="FS") | Q(boundary_end__status="FS")
+        return self.filter(filter_qs).select_related(*self.related_objs)
+
     def get_np_bylaws_to_display(self):
         filter_qs = Q(boundary_start__status="FS") | Q(boundary_end__status="FS")
         return (

@@ -3,8 +3,7 @@ from rest_framework import routers
 from api import views
 
 router = routers.DefaultRouter()
-router.register(r"npbylaws", views.NPByLawViewSet)
-router.register(r"rpbylaws", views.RPByLawViewSet)
+router.register(r"bylaws", views.ByLawViewSet)
 
 
 # Wire up our API using automatic URL routing.
