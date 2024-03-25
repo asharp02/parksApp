@@ -13,12 +13,8 @@
     ],
     "redirects": [
         {
-            "source": "/api/npbylaws",
-            "destination": "https://parking.adriansh.com/api/npbylaws"
-        },
-        {
-            "source": "/api/rpbylaws",
-            "destination": "https://parking.adriansh.com/api/rpbylaws"
+            "source": "/api/bylaws",
+            "destination": "https://parking.adriansh.com/api/bylaws"
         }
     ]
 }
