@@ -17,6 +17,31 @@ function App() {
     const [loading, setLoading] = useState(true);
     const [npBylawMarkers, setNpBylawMarkers] = useState([]);
     const [rpBylawMarkers, setRpBylawMarkers] = useState([]);
+    const [markersShown, setMarkersShown] = useState(false);
+
+    const fetchNpData = async (currLat, currLng) => {
+        try {
+            const response = await axios.get(`/api/bylaws/?type=np&lat=${currLat}&lng=${currLng}`);
+            const result = await response.data;
+            setNpBylaws(result);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching no parking bylaws", error);
+            setLoading(false);
+        }
+    };
+
+    const fetchRpData = async (currLat, currLng) => {
+        try {
+            const response = await axios.get(`/api/bylaws/?type=rp&lat=${currLat}&lng=${currLng}`);
+            const result = await response.data;
+            setRpBylaws(result);
+            setLoading(false);
+        } catch (error) {
+            console.log("Error fetching restricted parking bylaws", error);
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (map.current) return;
@@ -26,46 +51,44 @@ function App() {
             center: [lng, lat],
             zoom: zoom
         });
+        fetchNpData(lat, lng);
+        fetchRpData(lat, lng);
 
-        const fetchNpData = async () => {
-            try {
-                const response = await axios.get("/api/npbylaws");
-                const result = await response.data;
-                setNpBylaws(result);
-                setLoading(false);
-            } catch (error) {
-                console.error("Error fetching no parking bylaws", error);
-                setLoading(false);
-            }
-        };
-
-        const fetchRpData = async () => {
-            try {
-                const response = await axios.get("/api/rpbylaws");
-                const result = await response.data;
-                setRpBylaws(result);
-                setLoading(false);
-            } catch (error) {
-                console.log("Error fetching restricted parking bylaws", error);
-                setLoading(false);
-            }
-        };
-        fetchNpData();
-        fetchRpData();
-
-        map.current.on("moveend", () => {
-            setLng(map.current.getCenter().lng.toFixed(4));
-            setLat(map.current.getCenter().lat.toFixed(4));
+        // handle map markers when zoom is changed
+        map.current.on("zoomend", () => {
+            const updatedZoom = map.current.getZoom().toFixed(2);
             setZoom(map.current.getZoom().toFixed(2));
-            fetchNpData(); // only fetch data based on current lat/lng and radius
-            fetchRpData(); // only fetch data based on current lat/lng and radius
+
+            if (updatedZoom <= 13 && (npBylawMarkers.length > 0 || rpBylawMarkers.length > 0)) {
+                removeMarkers(npBylawMarkers);
+                removeMarkers(rpBylawMarkers);
+            } else if (!markersShown && updatedZoom > 13) {
+                addMarkers(npBylawMarkers);
+                addMarkers(rpBylawMarkers);
+            } 
+        })
+        map.current.on("move", () => {
+            const updatedLat = map.current.getCenter().lat.toFixed(4);
+            const updatedLng = map.current.getCenter().lng.toFixed(4)
+            setLng(updatedLng);
+            setLat(updatedLng);
+            const updatedZoom = map.current.getZoom().toFixed(2);
+            if (updatedZoom > 13) {
+                fetchNpData(updatedLat, updatedLng); // only fetch data based on current lat/lng and radius
+                fetchRpData(updatedLat, updatedLng); // only fetch data based on current lat/lng and radius
+            }
         });
     }, []);
 
     useEffect(() => {
-        if(!loading && npBylaws && rpBylaws && npBylaws.results && rpBylaws.results){
-            setNpBylawMarkers(createMarkers(npBylaws, true));
-            setRpBylawMarkers(createMarkers(rpBylaws, false));
+        if(!loading && npBylaws && rpBylaws && npBylaws.results && rpBylaws.results) {
+            removeMarkers(npBylawMarkers);
+            removeMarkers(rpBylawMarkers);
+            const updatedZoom = map.current.getZoom().toFixed(2);
+            if (updatedZoom > 13){
+                setNpBylawMarkers(createMarkers(npBylaws, true));
+                setRpBylawMarkers(createMarkers(rpBylaws, false));
+            }
         }
     }, [loading, npBylaws, rpBylaws])
 
@@ -79,7 +102,7 @@ function App() {
                 .addTo(map.current)
             return marker_a
         })
-        console.log(markers)
+        setMarkersShown(true);
         return markers
     }
 
@@ -133,11 +156,13 @@ function App() {
         bylawMarkers.forEach((marker) => {
             marker.addTo(map.current);
         })
+        setMarkersShown(true);
     }
     const removeMarkers = (bylawMarkers) => {
         bylawMarkers.forEach((marker) => {
             marker.remove();
         })
+        setMarkersShown(false);
     }
 
     const toggleMarkers = (isNPMarkers, isChecked) => {
