@@ -67,7 +67,7 @@ function App() {
                 addMarkers(rpBylawMarkers);
             } 
         })
-        map.current.on("moveend", () => {
+        map.current.on("move", () => {
             const updatedLat = map.current.getCenter().lat.toFixed(4);
             const updatedLng = map.current.getCenter().lng.toFixed(4)
             setLng(updatedLng);
