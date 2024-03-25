@@ -55,27 +55,33 @@ function App() {
         fetchRpData(lat, lng);
 
         // handle map markers when zoom is changed
-        map.current.on("zoomend", () => {
-            const updatedZoom = map.current.getZoom().toFixed(2);
-            setZoom(map.current.getZoom().toFixed(2));
+        // map.current.on("zoom", () => {
+        //     const updatedZoom = map.current.getZoom().toFixed(2);
+        //     setZoom(map.current.getZoom().toFixed(2));
 
-            if (updatedZoom <= 13 && (npBylawMarkers.length > 0 || rpBylawMarkers.length > 0)) {
-                removeMarkers(npBylawMarkers);
-                removeMarkers(rpBylawMarkers);
-            } else if (!markersShown && updatedZoom > 13) {
-                addMarkers(npBylawMarkers);
-                addMarkers(rpBylawMarkers);
-            } 
-        })
-        map.current.on("move", () => {
+        //     // if (updatedZoom <= 13) {
+                // removeMarkers(npBylawMarkers);
+                // removeMarkers(rpBylawMarkers);
+        //     // } else if (!markersShown && updatedZoom > 13) {
+        //     //     addMarkers(npBylawMarkers);
+        //     //     addMarkers(rpBylawMarkers);
+        //     // } 
+        // })
+        map.current.on("moveend", () => {
             const updatedLat = map.current.getCenter().lat.toFixed(4);
             const updatedLng = map.current.getCenter().lng.toFixed(4)
             setLng(updatedLng);
             setLat(updatedLng);
             const updatedZoom = map.current.getZoom().toFixed(2);
+            setZoom(updatedZoom);
+
             if (updatedZoom > 13) {
                 fetchNpData(updatedLat, updatedLng); // only fetch data based on current lat/lng and radius
                 fetchRpData(updatedLat, updatedLng); // only fetch data based on current lat/lng and radius
+            } else {
+                // TODO: why are the markers empty here? even when markers are clearly displayed on the map
+                removeMarkers(npBylawMarkers);
+                removeMarkers(rpBylawMarkers);
             }
         });
     }, []);
@@ -84,11 +90,8 @@ function App() {
         if(!loading && npBylaws && rpBylaws && npBylaws.results && rpBylaws.results) {
             removeMarkers(npBylawMarkers);
             removeMarkers(rpBylawMarkers);
-            const updatedZoom = map.current.getZoom().toFixed(2);
-            if (updatedZoom > 13){
-                setNpBylawMarkers(createMarkers(npBylaws, true));
-                setRpBylawMarkers(createMarkers(rpBylaws, false));
-            }
+            setNpBylawMarkers(createMarkers(npBylaws, true));
+            setRpBylawMarkers(createMarkers(rpBylaws, false));
         }
     }, [loading, npBylaws, rpBylaws])
 
