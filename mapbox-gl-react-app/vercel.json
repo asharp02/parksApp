@@ -13,8 +13,8 @@
     ],
     "redirects": [
         {
-            "source": "/api/bylaws",
-            "destination": "https://parking.adriansh.com/api/bylaws"
+            "source": "/api/bylaws/",
+            "destination": "https://parking.adriansh.com/api/bylaws/"
         }
     ]
 }
