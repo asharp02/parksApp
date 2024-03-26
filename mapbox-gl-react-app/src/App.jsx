@@ -20,6 +20,7 @@ function App() {
     const [markersShown, setMarkersShown] = useState(false);
 
     const fetchNpData = async (currLat, currLng) => {
+        setNpBylaws([]);
         try {
             const response = await axios.get(`/api/bylaws/?type=np&lat=${currLat}&lng=${currLng}`);
             const result = await response.data;
@@ -32,6 +33,7 @@ function App() {
     };
 
     const fetchRpData = async (currLat, currLng) => {
+        setRpBylaws([]);
         try {
             const response = await axios.get(`/api/bylaws/?type=rp&lat=${currLat}&lng=${currLng}`);
             const result = await response.data;
@@ -55,18 +57,18 @@ function App() {
         fetchRpData(lat, lng);
 
         // handle map markers when zoom is changed
-        // map.current.on("zoom", () => {
-        //     const updatedZoom = map.current.getZoom().toFixed(2);
-        //     setZoom(map.current.getZoom().toFixed(2));
+        map.current.on("zoomend", () => {
+            const updatedZoom = map.current.getZoom().toFixed(2);
+            setZoom(updatedZoom);
 
-        //     // if (updatedZoom <= 13) {
-                // removeMarkers(npBylawMarkers);
-                // removeMarkers(rpBylawMarkers);
-        //     // } else if (!markersShown && updatedZoom > 13) {
-        //     //     addMarkers(npBylawMarkers);
-        //     //     addMarkers(rpBylawMarkers);
-        //     // } 
-        // })
+            // if (updatedZoom <= 13) {
+            //     removeMarkers(npBylawMarkers);
+            //     removeMarkers(rpBylawMarkers);
+            // } //else if (!markersShown && updatedZoom > 13) {
+            //     addMarkers(npBylawMarkers);
+            //     addMarkers(rpBylawMarkers);
+            // } 
+        })
         map.current.on("moveend", () => {
             const updatedLat = map.current.getCenter().lat.toFixed(4);
             const updatedLng = map.current.getCenter().lng.toFixed(4)
@@ -78,10 +80,6 @@ function App() {
             if (updatedZoom > 13) {
                 fetchNpData(updatedLat, updatedLng); // only fetch data based on current lat/lng and radius
                 fetchRpData(updatedLat, updatedLng); // only fetch data based on current lat/lng and radius
-            } else {
-                // TODO: why are the markers empty here? even when markers are clearly displayed on the map
-                removeMarkers(npBylawMarkers);
-                removeMarkers(rpBylawMarkers);
             }
         });
     }, []);
@@ -90,14 +88,17 @@ function App() {
         if(!loading && npBylaws && rpBylaws && npBylaws.results && rpBylaws.results) {
             removeMarkers(npBylawMarkers);
             removeMarkers(rpBylawMarkers);
-            console.log("in useeffect")
-            setNpBylawMarkers(createMarkers(npBylaws, true));
-            setRpBylawMarkers(createMarkers(rpBylaws, false));
+            const updatedZoom = map.current.getZoom().toFixed(2);
+            if (updatedZoom > 13) {
+                const npMarkers = createMarkers(npBylaws, true);
+                const rpMarkers = createMarkers(rpBylaws, false);
+                setNpBylawMarkers(npMarkers);
+                setRpBylawMarkers(rpMarkers);
+            }
         }
     }, [loading, npBylaws, rpBylaws])
 
     const createMarkers = (bylaws, isNpBylaws) => {
-        console.log("calling create markers")
         const markers = bylaws.results.map((bylaw) => {
             let popup = createPopup(bylaw);
             const color = isNpBylaws ? "#ff0000" : "#50C878";
