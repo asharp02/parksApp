@@ -90,12 +90,14 @@ function App() {
         if(!loading && npBylaws && rpBylaws && npBylaws.results && rpBylaws.results) {
             removeMarkers(npBylawMarkers);
             removeMarkers(rpBylawMarkers);
+            console.log("in useeffect")
             setNpBylawMarkers(createMarkers(npBylaws, true));
             setRpBylawMarkers(createMarkers(rpBylaws, false));
         }
     }, [loading, npBylaws, rpBylaws])
 
     const createMarkers = (bylaws, isNpBylaws) => {
+        console.log("calling create markers")
         const markers = bylaws.results.map((bylaw) => {
             let popup = createPopup(bylaw);
             const color = isNpBylaws ? "#ff0000" : "#50C878";
