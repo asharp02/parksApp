@@ -18,6 +18,8 @@ function App() {
     const [npBylawMarkers, setNpBylawMarkers] = useState([]);
     const [rpBylawMarkers, setRpBylawMarkers] = useState([]);
     const [markersShown, setMarkersShown] = useState(false);
+    const [isNPChecked, setIsNPChecked] = useState(true)
+    const [isRPChecked, setIsRPChecked] = useState(true)
 
     const fetchNpData = async (currLat, currLng) => {
         setNpBylaws([]);
@@ -105,9 +107,16 @@ function App() {
             let marker_a = new mapboxgl.Marker({color: color})
                 .setLngLat([bylaw.midpoint[1], bylaw.midpoint[0]])
                 .setPopup(popup)
-                .addTo(map.current)
             return marker_a
         })
+
+        // Only display markers if corresponding checkbox is checked
+        if (isNpBylaws && isNPChecked) {
+            addMarkers(markers);
+        }
+        if (!isNpBylaws && isRPChecked) {
+            addMarkers(markers);
+        }
         setMarkersShown(true);
         return markers
     }
@@ -182,7 +191,14 @@ function App() {
 
     return (
         <div>
-            <BylawToggle toggleHandler={toggleMarkers}></BylawToggle>
+            <BylawToggle 
+                toggleHandler={toggleMarkers} 
+                isNPChecked={isNPChecked}
+                isRPChecked={isRPChecked}
+                setIsNPChecked={setIsNPChecked}
+                setIsRPChecked={setIsRPChecked}
+            >
+            </BylawToggle>
             <ZoomModal zoom={zoom}></ZoomModal>
             <div ref={mapContainer} className="map-container" />
         </div>

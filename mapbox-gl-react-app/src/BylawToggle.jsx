@@ -1,9 +1,7 @@
 import Checkbox from "./Checkbox.jsx";
 import React, { useState } from 'react';
 
-function BylawToggle({ toggleHandler }) {
-    const [isNPChecked, setIsNPChecked] = useState(true)
-    const [isRPChecked, setIsRPChecked] = useState(true)
+function BylawToggle({ toggleHandler, isNPChecked, isRPChecked, setIsNPChecked, setIsRPChecked }) {
     const toggleBylawMarkers = (isNoParkingMarkers) => {
         if (isNoParkingMarkers){
             toggleHandler(isNoParkingMarkers, isNPChecked);
