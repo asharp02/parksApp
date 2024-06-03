@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Exit immediately if a command exits with a non-zero status
 set -e
@@ -18,5 +18,5 @@ echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
 # Start the Django server
-echo "Starting server..."
+echo "Starting server with command: $@"
 exec "$@"

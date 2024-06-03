@@ -147,3 +147,5 @@ CORS_ORIGIN_WHITELIST = [
     "http://localhost:5173",
     "https://street-parking-toronto.vercel.app",
 ]
+
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")

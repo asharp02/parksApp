@@ -19,7 +19,7 @@ COPY . /app
 COPY ./entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-ENTRYPOINT [ "bash", "-c", "/app/entrypoint.sh" ]
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 RUN apt-get update && apt-get install -y netcat-openbsd
 

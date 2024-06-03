@@ -16,7 +16,6 @@ services:
       volumes:
         - ./parking:/app  # Mount the backend directory
         - /app/node_modules  # Avoid mounting node_modules from host
-
       networks:
         - app-network
 
