@@ -85,10 +85,10 @@ class ByLaw(models.Model):
     """
 
     source_id = models.IntegerField(null=True)
-    schedule = models.CharField(max_length=10)
+    schedule = models.CharField(max_length=50)
     schedule_name = models.CharField(max_length=100)
     highway = models.ForeignKey("Highway", on_delete=models.CASCADE)
-    side = models.CharField(max_length=10, null=True)
+    side = models.CharField(max_length=50, null=True)
     boundary_start = models.ForeignKey(
         "Intersection",
         on_delete=models.CASCADE,
@@ -98,9 +98,9 @@ class ByLaw(models.Model):
     boundary_end = models.ForeignKey(
         "Intersection", on_delete=models.CASCADE, related_name="boundary_end", null=True
     )
-    between = models.CharField(max_length=200, null=True)
+    between = models.CharField(max_length=400, null=True)
     times_and_or_days = models.CharField(
-        max_length=200, null=True
+        max_length=400, null=True
     )  # represents prohibited times/days if a No Parking bylaw or allowed times/days if restricted parking
     max_period_permitted = models.CharField(
         max_length=100, null=True
@@ -135,7 +135,7 @@ class ByLaw(models.Model):
 
 
 class Highway(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=200, unique=True)
 
     def __str__(self):
         return self.name
